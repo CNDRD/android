@@ -30,9 +30,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Build installable QA debug APK
         run: ./gradlew :opencloudApp:assembleQaDebug
-      - name: Test upload feedback
+      - name: Test startup layout and upload feedback
         if: matrix.source == 'feature'
-        run: ./gradlew :opencloudApp:testQaDebugUnitTest --tests 'eu.opencloud.android.presentation.transfers.UploadFeedbackTrackerTest'
+        run: ./gradlew :opencloudApp:testQaDebugUnitTest --tests 'eu.opencloud.android.presentation.transfers.UploadFeedbackTrackerTest' --tests 'eu.opencloud.android.presentation.startup.StartupLayoutTest'
       - uses: actions/upload-artifact@v4
         with:
           name: opencloud-${{ matrix.source }}-qa-debug
