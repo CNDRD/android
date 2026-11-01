@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="grid_density_title">Grid density</string>
+    <string name="grid_density_automatic">Automatic</string>
+    <plurals name="grid_density_columns">
+        <item quantity="one">%d column</item>
+        <item quantity="other">%d columns</item>
+    </plurals>
+    <string name="upload_feedback_preparing">Preparing uploads…</string>
+    <string name="upload_feedback_active">Uploads: %1$d uploading · %2$d queued</string>
+    <string name="upload_feedback_finished">Uploads finished: %1$d successful · %2$d failed</string>
+    <string name="upload_feedback_view">View uploads</string>
+</resources>

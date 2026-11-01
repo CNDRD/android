@@ -26,6 +26,10 @@
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="always" />
     <item
+        android:id="@+id/action_grid_density"
+        android:title="@string/grid_density_title"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_select_all"
         android:orderInCategory="1"
         android:title="@string/actionbar_select_all"

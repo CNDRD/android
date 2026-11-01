@@ -113,6 +113,7 @@ import eu.opencloud.android.presentation.spaces.SpacesListFragment
 import eu.opencloud.android.presentation.spaces.SpacesListFragment.Companion.BUNDLE_KEY_CLICK_SPACE
 import eu.opencloud.android.presentation.spaces.SpacesListFragment.Companion.REQUEST_KEY_CLICK_SPACE
 import eu.opencloud.android.presentation.spaces.SpacesListViewModel
+import com.google.android.material.snackbar.Snackbar
 import eu.opencloud.android.presentation.transfers.TransfersViewModel
 import eu.opencloud.android.providers.WorkManagerProvider
 import eu.opencloud.android.syncadapter.FileSyncAdapter
@@ -293,6 +294,7 @@ class FileDisplayActivity : FileActivity(),
         }
 
 
+        observeUploadFeedback()
         checkNotificationPermission()
 
         // edge-to-edge
@@ -683,6 +685,39 @@ class FileDisplayActivity : FileActivity(),
         }
     }
 
+    private fun observeUploadFeedback() {
+        val feedbackView = binding.navCoordinatorLayout.uploadFeedback
+        feedbackView.setOnClickListener { openUploads() }
+        collectLatestLifecycleFlow(transfersViewModel.transfersStateFlow) { transfers ->
+            if (transfers == null) return@collectLatestLifecycleFlow
+            val currentAccount = getCurrentOpenCloudAccount(this)
+            if (currentAccount == null) {
+                feedbackView.isVisible = false
+                return@collectLatestLifecycleFlow
+            }
+            val feedback = transfersViewModel.uploadFeedbackTracker.update(currentAccount.name, transfers)
+            feedbackView.isVisible = feedback.uploading + feedback.queued > 0
+            feedbackView.text = getString(R.string.upload_feedback_active, feedback.uploading, feedback.queued)
+            feedbackView.contentDescription = "${feedbackView.text}. ${getString(R.string.upload_feedback_view)}"
+            if (feedback.succeeded + feedback.failed > 0) {
+                Snackbar.make(
+                    binding.root,
+                    getString(R.string.upload_feedback_finished, feedback.succeeded, feedback.failed),
+                    Snackbar.LENGTH_LONG,
+                ).setAction(R.string.upload_feedback_view) { openUploads() }.show()
+            }
+        }
+    }
+
+    private fun openUploads() {
+        startActivity(Intent(this, UploadListActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+    }
+
+    private fun showPreparingUploads() {
+        Snackbar.make(binding.root, R.string.upload_feedback_preparing, Snackbar.LENGTH_SHORT)
+            .setAction(R.string.upload_feedback_view) { openUploads() }.show()
+    }
+
     private fun requestUploadOfFilesFromFileSystem(filePaths: Array<String>?) {
         if (filePaths != null) {
             val remotePaths = arrayOfNulls<String>(filePaths.size)
@@ -691,6 +726,7 @@ class FileDisplayActivity : FileActivity(),
                 remotePaths[j] = remotePathBase + File(filePaths[j]).name
             }
 
+            showPreparingUploads()
             transfersViewModel.uploadFilesFromSystem(
                 accountName = account.name,
                 listOfLocalPaths = filePaths.toList(),
@@ -727,6 +763,7 @@ class FileDisplayActivity : FileActivity(),
             }
         }
 
+        showPreparingUploads()
         transfersViewModel.uploadFilesFromContentUri(
             accountName = account.name,
             listOfContentUris = streamsToUpload,

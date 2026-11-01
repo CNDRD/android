@@ -1,0 +1,42 @@
+name: Fork UX APK and tests
+
+on:
+  push:
+    branches: [feature/upload-feedback-grid-density]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.source }} APK
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        source: [baseline, feature]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ matrix.source == 'baseline' && '3d73ce06f4926c21013650a4f98bc5d37fff2ad1' || github.sha }}
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build installable QA debug APK
+        run: ./gradlew :opencloudApp:assembleQaDebug
+      - name: Test upload feedback
+        if: matrix.source == 'feature'
+        run: ./gradlew :opencloudApp:testQaDebugUnitTest --tests 'eu.opencloud.android.presentation.transfers.UploadFeedbackTrackerTest'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: opencloud-${{ matrix.source }}-qa-debug
+          path: opencloudApp/build/outputs/apk/qa/debug/*.apk
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always() && matrix.source == 'feature'
+        with:
+          name: upload-feedback-test-results
+          path: opencloudApp/build/reports/tests/

@@ -359,6 +359,10 @@ class MainFileListFragment : Fragment(),
             updateActionModeAfterTogglingSelected()
             true
         }
+        menu.findItem(R.id.action_grid_density)?.setOnMenuItemClickListener {
+            showGridDensityDialog()
+            true
+        }
         if (isPickingAFolder() || getCurrentSpace()?.isPersonal == false) {
             menu.findItem(R.id.action_share_current_folder)?.itemId?.let { menu.removeItem(it) }
         } else {
@@ -377,7 +381,7 @@ class MainFileListFragment : Fragment(),
         if (mainFileListViewModel.isGridModeSetAsPreferred()) {
             layoutManager =
                 StaggeredGridLayoutManager(
-                    ColumnQuantity(requireContext(), R.layout.grid_item).calculateNoOfColumns(),
+                    preferredGridColumnCount(),
                     RecyclerView.VERTICAL
                 )
             viewType = ViewType.VIEW_TYPE_GRID
@@ -964,6 +968,7 @@ class MainFileListFragment : Fragment(),
     }
 
     override fun onViewTypeListener(viewType: ViewType) {
+        this.viewType = viewType
         binding.optionsLayout.viewTypeSelected = viewType
 
         if (viewType == ViewType.VIEW_TYPE_LIST) {
@@ -972,10 +977,31 @@ class MainFileListFragment : Fragment(),
 
         } else {
             mainFileListViewModel.setGridModeAsPreferred()
-            layoutManager.spanCount = ColumnQuantity(requireContext(), R.layout.grid_item).calculateNoOfColumns()
+            layoutManager.spanCount = preferredGridColumnCount()
         }
 
         fileListAdapter.notifyItemRangeChanged(0, fileListAdapter.itemCount)
+    }
+
+    private fun preferredGridColumnCount(): Int =
+        mainFileListViewModel.getPreferredGridColumns().takeIf { it != 0 }
+            ?: ColumnQuantity(requireContext(), R.layout.grid_item).calculateNoOfColumns()
+
+    private fun showGridDensityDialog() {
+        val columnCounts = listOf(0, 2, 3, 4, 5, 6)
+        val choices = columnCounts.map { columns ->
+            if (columns == 0) getString(R.string.grid_density_automatic)
+            else resources.getQuantityString(R.plurals.grid_density_columns, columns, columns)
+        }.toTypedArray()
+        AlertDialog.Builder(requireContext())
+            .setTitle(R.string.grid_density_title)
+            .setSingleChoiceItems(choices, columnCounts.indexOf(mainFileListViewModel.getPreferredGridColumns())) { dialog, selected ->
+                mainFileListViewModel.setPreferredGridColumns(columnCounts[selected])
+                onViewTypeListener(ViewType.VIEW_TYPE_GRID)
+                dialog.dismiss()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     override fun onSortSelected(sortType: SortType) {

@@ -29,6 +29,16 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <include layout="@layout/opencloud_toolbar" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/upload_feedback"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:textAllCaps="false"
+            android:visibility="gone"
+            android:accessibilityLiveRegion="polite" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <include
