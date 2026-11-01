@@ -1,5 +1,6 @@
 package eu.opencloud.android.presentation.transfers
 
+import eu.opencloud.android.domain.transfers.model.UploadEnqueuedBy
 import eu.opencloud.android.domain.transfers.model.TransferStatus
 import eu.opencloud.android.testutil.OC_TRANSFER
 import org.junit.Assert.assertEquals
@@ -50,6 +51,16 @@ class UploadFeedbackTrackerTest {
         val other = OC_TRANSFER.copy(accountName = "other", status = TransferStatus.TRANSFER_SUCCEEDED)
         assertEquals(UploadFeedbackTracker.Feedback(0, 0, 0, 0), tracker.update(account, listOf(other)))
         assertEquals(0, tracker.update("other", listOf(other)).succeeded)
+    }
+
+    @Test
+    fun `automatic camera backups do not flood manual upload feedback`() {
+        tracker.update(account, emptyList())
+        val automatic = OC_TRANSFER.copy(createdBy = UploadEnqueuedBy.ENQUEUED_AS_AUTOMATIC_UPLOAD_PICTURE)
+        assertEquals(UploadFeedbackTracker.Feedback(0, 0, 0, 0), tracker.update(account, listOf(automatic)))
+        assertEquals(0, tracker.update(account, listOf(
+            automatic.copy(status = TransferStatus.TRANSFER_SUCCEEDED)
+        )).succeeded)
     }
 
     @Test

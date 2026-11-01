@@ -59,6 +59,7 @@ import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.work.WorkManager
+import com.google.android.material.snackbar.Snackbar
 import eu.opencloud.android.AppRater
 import eu.opencloud.android.BuildConfig
 import eu.opencloud.android.MainApp
@@ -73,6 +74,7 @@ import eu.opencloud.android.domain.exceptions.SSLRecoverablePeerUnverifiedExcept
 import eu.opencloud.android.domain.exceptions.UnauthorizedException
 import eu.opencloud.android.domain.files.model.FileListOption
 import eu.opencloud.android.domain.files.model.OCFile
+import eu.opencloud.android.domain.transfers.model.OCTransfer
 import eu.opencloud.android.domain.files.model.OCFile.Companion.ROOT_PARENT_ID
 import eu.opencloud.android.domain.spaces.model.OCSpace
 import eu.opencloud.android.domain.utils.Event
@@ -113,7 +115,6 @@ import eu.opencloud.android.presentation.spaces.SpacesListFragment
 import eu.opencloud.android.presentation.spaces.SpacesListFragment.Companion.BUNDLE_KEY_CLICK_SPACE
 import eu.opencloud.android.presentation.spaces.SpacesListFragment.Companion.REQUEST_KEY_CLICK_SPACE
 import eu.opencloud.android.presentation.spaces.SpacesListViewModel
-import com.google.android.material.snackbar.Snackbar
 import eu.opencloud.android.presentation.transfers.TransfersViewModel
 import eu.opencloud.android.providers.WorkManagerProvider
 import eu.opencloud.android.syncadapter.FileSyncAdapter
@@ -325,6 +326,7 @@ class FileDisplayActivity : FileActivity(),
         super.onResumeFragments()
         // New intents can arrive while fragment state is saved. Navigate after it is safe to commit.
         navigateToShortcutFolder()
+        transfersViewModel.transfersStateFlow.value?.let { renderUploadFeedback(it) }
     }
 
     private fun checkNotificationPermission() {
@@ -690,22 +692,26 @@ class FileDisplayActivity : FileActivity(),
         feedbackView.setOnClickListener { openUploads() }
         collectLatestLifecycleFlow(transfersViewModel.transfersStateFlow) { transfers ->
             if (transfers == null) return@collectLatestLifecycleFlow
-            val currentAccount = getCurrentOpenCloudAccount(this)
-            if (currentAccount == null) {
-                feedbackView.isVisible = false
-                return@collectLatestLifecycleFlow
-            }
-            val feedback = transfersViewModel.uploadFeedbackTracker.update(currentAccount.name, transfers)
-            feedbackView.isVisible = feedback.uploading + feedback.queued > 0
-            feedbackView.text = getString(R.string.upload_feedback_active, feedback.uploading, feedback.queued)
-            feedbackView.contentDescription = "${feedbackView.text}. ${getString(R.string.upload_feedback_view)}"
-            if (feedback.succeeded + feedback.failed > 0) {
-                Snackbar.make(
-                    binding.root,
-                    getString(R.string.upload_feedback_finished, feedback.succeeded, feedback.failed),
-                    Snackbar.LENGTH_LONG,
-                ).setAction(R.string.upload_feedback_view) { openUploads() }.show()
-            }
+            renderUploadFeedback(transfers)
+        }
+    }
+
+    private fun renderUploadFeedback(transfers: List<OCTransfer>) {
+        val feedbackView = binding.navCoordinatorLayout.uploadFeedback
+        val currentAccount = getCurrentOpenCloudAccount(this)
+        if (currentAccount == null) {
+            feedbackView.isVisible = false
+            return
+        }
+        val feedback = transfersViewModel.uploadFeedbackTracker.update(currentAccount.name, transfers)
+        feedbackView.isVisible = feedback.uploading + feedback.queued > 0
+        feedbackView.text = getString(R.string.upload_feedback_active, feedback.uploading, feedback.queued)
+        if (feedback.succeeded + feedback.failed > 0) {
+            Snackbar.make(
+                binding.root,
+                getString(R.string.upload_feedback_finished, feedback.succeeded, feedback.failed),
+                Snackbar.LENGTH_LONG,
+            ).setAction(R.string.upload_feedback_view) { openUploads() }.show()
         }
     }
 

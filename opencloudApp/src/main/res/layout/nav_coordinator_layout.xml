@@ -37,6 +37,8 @@
             android:layout_height="wrap_content"
             android:minHeight="48dp"
             android:textAllCaps="false"
+            android:textColor="?attr/colorOnSurface"
+            app:backgroundTint="?attr/colorSurface"
             android:visibility="gone"
             android:accessibilityLiveRegion="polite" />
     </com.google.android.material.appbar.AppBarLayout>
