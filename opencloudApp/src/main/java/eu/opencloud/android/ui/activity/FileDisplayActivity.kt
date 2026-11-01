@@ -711,7 +711,8 @@ class FileDisplayActivity : FileActivity(),
                 binding.root,
                 getString(R.string.upload_feedback_finished, feedback.succeeded, feedback.failed),
                 Snackbar.LENGTH_LONG,
-            ).setAction(R.string.upload_feedback_view) { openUploads() }.show()
+            ).setAnchorView(uploadMessageAnchor())
+                .setAction(R.string.upload_feedback_view) { openUploads() }.show()
         }
     }
 
@@ -719,8 +720,13 @@ class FileDisplayActivity : FileActivity(),
         startActivity(Intent(this, UploadListActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
     }
 
+    private fun uploadMessageAnchor(): View = with(binding.navCoordinatorLayout) {
+        if (bottomNavView.isVisible) bottomNavView else bottomNavViewSpacer
+    }
+
     private fun showPreparingUploads() {
         Snackbar.make(binding.root, R.string.upload_feedback_preparing, Snackbar.LENGTH_SHORT)
+            .setAnchorView(uploadMessageAnchor())
             .setAction(R.string.upload_feedback_view) { openUploads() }.show()
     }
 
