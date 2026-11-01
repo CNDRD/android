@@ -359,10 +359,6 @@ class MainFileListFragment : Fragment(),
             updateActionModeAfterTogglingSelected()
             true
         }
-        menu.findItem(R.id.action_grid_density)?.setOnMenuItemClickListener {
-            showGridDensityDialog()
-            true
-        }
         if (isPickingAFolder() || getCurrentSpace()?.isPersonal == false) {
             menu.findItem(R.id.action_share_current_folder)?.itemId?.let { menu.removeItem(it) }
         } else {
@@ -432,6 +428,9 @@ class MainFileListFragment : Fragment(),
 
         // Set SortOptions and its listeners
         binding.optionsLayout.onSortOptionsListener = this
+        if (!isPickingAFolder()) {
+            binding.optionsLayout.onGridDensityListener = { showGridDensityDialog() }
+        }
         setViewTypeSelector(SortOptionsView.AdditionalView.CREATE_FOLDER)
 
         showOrHideFab(requireArguments().getParcelable(ARG_FILE_LIST_OPTION)!!, requireArguments().getParcelable(ARG_INITIAL_FOLDER_TO_DISPLAY)!!)

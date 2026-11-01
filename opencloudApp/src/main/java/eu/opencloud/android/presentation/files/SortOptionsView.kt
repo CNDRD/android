@@ -27,6 +27,7 @@ import android.view.View
 import android.widget.Button
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
@@ -50,6 +51,12 @@ class SortOptionsView @JvmOverloads constructor(
 
     private var _binding: SortOptionsLayoutBinding? = null
     private val binding get() = _binding!!
+
+    var onGridDensityListener: (() -> Unit)? = null
+        set(listener) {
+            field = listener
+            binding.gridDensitySelector.isVisible = listener != null
+        }
 
     // Enable list view by default.
     var viewTypeSelected: ViewType = ViewType.VIEW_TYPE_LIST
@@ -91,6 +98,8 @@ class SortOptionsView @JvmOverloads constructor(
                 sortOrderSelected
             )
         }
+        binding.gridDensitySelector.setAccessibilityRole(className = Button::class.java)
+        binding.gridDensitySelector.setOnClickListener { onGridDensityListener?.invoke() }
         binding.viewTypeSelector.setOnClickListener {
             onSortOptionsListener?.onViewTypeListener(
                 viewTypeSelected.getOppositeViewType()

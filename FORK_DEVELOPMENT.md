@@ -20,7 +20,7 @@ These are development builds signed with a debug key. A stable signing key and a
 - Upload selection immediately shows “Preparing uploads…”.
 - A button below the toolbar displays queued and uploading manual file counts. Tap it to open uploads, where the existing transfer details and retry controls remain available.
 - New upload results show success/failure counts and a “View uploads” action. Existing history is not announced at launch. Automatic photo/video backups are excluded from these foreground messages.
-- The folder overflow menu offers “Grid density”: Automatic or 2–6 columns. Selecting a density switches to grid view and saves the setting. List view remains available.
+- The sorting row beside the list/grid toggle offers “Grid density”: Automatic or 2–6 columns. Selecting a density switches to grid view and saves the setting. List view remains available.
 
 ## Device checks before merging
 
