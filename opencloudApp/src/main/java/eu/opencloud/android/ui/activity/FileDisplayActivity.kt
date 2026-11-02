@@ -51,6 +51,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -215,6 +216,7 @@ class FileDisplayActivity : FileActivity(),
         Timber.v("onCreate() start")
 
         super.onCreate(savedInstanceState) // this calls onAccountChanged() when openCloud Account is valid
+        registerBackNavigation()
 
         checkPasscodeEnforced(this)
 
@@ -881,7 +883,16 @@ class FileDisplayActivity : FileActivity(),
         fileOperationsViewModel.performOperation(copyOperation)
     }
 
+    internal fun registerBackNavigation() {
+        // Predictive back gestures use the dispatcher rather than the legacy Activity hook.
+        onBackPressedDispatcher.addCallback(this) { handleBackNavigation() }
+    }
+
     override fun onBackPressed() {
+        onBackPressedDispatcher.onBackPressed()
+    }
+
+    private fun handleBackNavigation() {
         if (uploadsTabVisible && !isDrawerOpen()) {
             hideUploadsTab()
             setCheckedItemAtBottomBar(getMenuItemForFileListOption(fileListOption))
@@ -897,10 +908,10 @@ class FileDisplayActivity : FileActivity(),
          */
         if (isDrawerOpen() && isFabOpen) {
             // close drawer first
-            super.onBackPressed()
+            closeDrawer()
         } else if (isDrawerOpen() && !isFabOpen) {
             // close drawer
-            super.onBackPressed()
+            closeDrawer()
         } else if (!isDrawerOpen() && isFabOpen) {
             // close fab
             mainFileListFragment?.collapseFab()
