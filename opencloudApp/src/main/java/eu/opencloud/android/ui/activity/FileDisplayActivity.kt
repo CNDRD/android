@@ -184,6 +184,7 @@ class FileDisplayActivity : FileActivity(),
     private var syncInProgress = false
 
     var fileListOption = FileListOption.ALL_FILES
+    private var pendingBottomNavigationOption: FileListOption? = null
     private var waitingToSend: OCFile? = null
     private var waitingToOpen: OCFile? = null
 
@@ -315,8 +316,6 @@ class FileDisplayActivity : FileActivity(),
 
         Timber.v("onCreate() end")
     }
-
-    private var pendingBottomNavigationOption: FileListOption? = null
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
