@@ -707,12 +707,10 @@ class FileDisplayActivity : FileActivity(),
         feedbackView.isVisible = feedback.uploading + feedback.queued > 0
         feedbackView.text = getString(R.string.upload_feedback_active, feedback.uploading, feedback.queued)
         if (feedback.succeeded + feedback.failed > 0) {
-            Snackbar.make(
-                binding.root,
+            showUploadMessage(
                 getString(R.string.upload_feedback_finished, feedback.succeeded, feedback.failed),
                 Snackbar.LENGTH_LONG,
-            ).setAnchorView(uploadMessageAnchor())
-                .setAction(R.string.upload_feedback_view) { openUploads() }.show()
+            )
         }
     }
 
@@ -725,8 +723,18 @@ class FileDisplayActivity : FileActivity(),
     }
 
     private fun showPreparingUploads() {
-        Snackbar.make(binding.root, R.string.upload_feedback_preparing, Snackbar.LENGTH_SHORT)
+        showUploadMessage(getString(R.string.upload_feedback_preparing), Snackbar.LENGTH_SHORT)
+    }
+
+    private fun showUploadMessage(message: CharSequence, duration: Int) {
+        Snackbar.make(binding.root, message, duration)
             .setAnchorView(uploadMessageAnchor())
+            .apply {
+                // Keep upload messages flat so their shadow never covers the navigation bar.
+                view.stateListAnimator = null
+                view.elevation = 0f
+                view.translationZ = 0f
+            }
             .setAction(R.string.upload_feedback_view) { openUploads() }.show()
     }
 

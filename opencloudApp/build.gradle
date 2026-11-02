@@ -192,7 +192,7 @@ android {
             dimension "management"
             applicationIdSuffix ".qa"
             // replace stuff from setup.xml
-            resValue "string", "app_name", "OpenCloud QA"
+            resValue "string", "app_name", "OpenCloud"
             resValue "string", "account_type", "eu.opencloud.qa"
             resValue "string", "authority", "eu.opencloud.qa"
             resValue "string", "document_provider_authority", "eu.opencloud.qa.documents"
