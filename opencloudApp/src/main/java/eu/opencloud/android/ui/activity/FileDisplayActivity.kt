@@ -316,9 +316,12 @@ class FileDisplayActivity : FileActivity(),
         Timber.v("onCreate() end")
     }
 
+    private var pendingBottomNavigationOption: FileListOption? = null
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        pendingBottomNavigationOption = intent.getParcelableExtra(EXTRA_FILE_LIST_OPTION) as? FileListOption
         handleShortcutIntent()
     }
 
@@ -326,6 +329,12 @@ class FileDisplayActivity : FileActivity(),
         super.onResumeFragments()
         // New intents can arrive while fragment state is saved. Navigate after it is safe to commit.
         navigateToShortcutFolder()
+        pendingBottomNavigationOption?.let { option ->
+            pendingBottomNavigationOption = null
+            // Returning to the same tab preserves its current folder and scroll position.
+            if (option != fileListOption) navigateTo(option)
+            setCheckedItemAtBottomBar(getMenuItemForFileListOption(fileListOption))
+        }
         transfersViewModel.transfersStateFlow.value?.let { renderUploadFeedback(it) }
     }
 
