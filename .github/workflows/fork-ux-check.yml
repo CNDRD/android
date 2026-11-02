@@ -58,7 +58,7 @@ jobs:
           PYTHON
       - name: Test startup layout and upload feedback
         if: matrix.source == 'feature'
-        run: ./gradlew :opencloudApp:testQaDebugUnitTest --tests 'eu.opencloud.android.presentation.transfers.UploadFeedbackTrackerTest' --tests 'eu.opencloud.android.presentation.startup.StartupLayoutTest'
+        run: ./gradlew :opencloudApp:testQaDebugUnitTest --tests 'eu.opencloud.android.presentation.transfers.UploadFeedbackTrackerTest' --tests 'eu.opencloud.android.presentation.startup.StartupLayoutTest' --tests 'eu.opencloud.android.presentation.material3.Material3BrowserTest'
       - uses: actions/upload-artifact@v4
         if: matrix.source == 'baseline' || steps.signing.outputs.ready == 'true'
         with:

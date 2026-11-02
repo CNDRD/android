@@ -36,6 +36,14 @@ dependencies {
     implementation(libs.androidx.browser) { because "CustomTabs required for OAuth2 and OIDC" }
     implementation(libs.androidx.enterprise.feedback) { because "MDM feedback" }
 
+    // Material 3 islands inside the existing View/Fragment app.
+    // Compiler 1.5.5 matches the project's Kotlin 1.9.20.
+    implementation 'androidx.compose.ui:ui:1.6.2'
+    implementation 'androidx.compose.foundation:foundation:1.6.2'
+    implementation 'androidx.compose.material3:material3:1.2.1'
+    testImplementation 'androidx.compose.ui:ui-test-junit4:1.6.2'
+    debugImplementation 'androidx.compose.ui:ui-test-manifest:1.6.2'
+
     // Image loading
     implementation libs.coil
     implementation libs.glide
@@ -229,7 +237,12 @@ android {
         animationsDisabled = true
     }
 
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.5.5'
+    }
+
     buildFeatures {
+        compose true
         viewBinding true
         buildConfig true
     }

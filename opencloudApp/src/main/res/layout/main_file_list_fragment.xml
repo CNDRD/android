@@ -56,6 +56,7 @@
 
         <View
             android:id="@+id/shadow_view"
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="@dimen/file_list_progress_bar_height"
             android:layout_margin="0dp"

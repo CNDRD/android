@@ -55,13 +55,15 @@
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_nav_view"
+        style="@style/Widget.Material3.BottomNavigationView"
+        android:theme="@style/Theme.openCloud.Material3"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/bottom_navigation_bar_height"
+        android:layout_height="80dp"
         android:layout_gravity="bottom"
-        android:background="@color/actionbar_start_color"
+        android:background="@color/m3_surface_container"
         android:visibility="visible"
-        app:itemIconTint="?attr/colorOnPrimary"
-        app:itemTextColor="?attr/colorOnPrimary"
+        app:itemIconTint="@color/material3_nav_tint"
+        app:itemTextColor="@color/material3_nav_tint"
         app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toTopOf="@id/bottom_nav_view_spacer"
         app:layout_constraintEnd_toEndOf="parent"
@@ -73,7 +75,7 @@
         android:id="@+id/bottom_nav_view_spacer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="@color/actionbar_start_color"
+        android:background="@color/m3_surface_container"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
