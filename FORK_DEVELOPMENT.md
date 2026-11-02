@@ -13,7 +13,17 @@ Local commands (JDK 17 and Android SDK required):
 ./gradlew :opencloudApp:testQaDebugUnitTest --tests 'eu.opencloud.android.presentation.transfers.UploadFeedbackTrackerTest'
 ```
 
-These are development builds signed with a debug key. A stable signing key and a distinct permanent app identity should be established before relying on long-term in-place updates.
+## Permanent signing for updates
+
+Installable feature APKs require the repository Actions secret `OC_QA_SIGNING_JSON`. Its private JSON bundle contains `keystore_base64` (a PKCS12 keystore), `store_password`, `key_password`, and `key_alias`. Keep a private backup outside this repository. Never commit the bundle or upload it as a workflow artifact.
+
+The workflow restores this key only on the feature job. If the secret is absent, tests still run but no installable feature APK is published; the job summary explains setup. After adding the secret, rerun the feature job.
+
+The package ID and account/provider authorities stay fixed. Each build uses version code `1000 + GITHUB_RUN_NUMBER`. Rerunning a workflow keeps its version code; subsequent workflow runs increase it. Use this workflow consistently for installable builds.
+
+Moving from an earlier disposable debug key requires one final uninstall/reinstall. Subsequent APKs signed with this permanent key can update in place, retaining app data. Android still prompts to approve installation. The fixed package also avoids creating a new app entry for VPN inclusion; VPN behavior should be verified on the phone.
+
+Other unit-test workflows may compile with disposable debug keys internally, but those APKs are not published as installable feature artifacts.
 
 ## Behavior
 

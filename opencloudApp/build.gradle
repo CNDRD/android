@@ -157,6 +157,14 @@ android {
     }
 
     signingConfigs {
+        personal {
+            if (System.env.OC_QA_KEYSTORE) {
+                storeFile file(System.env.OC_QA_KEYSTORE)
+                storePassword System.env.OC_QA_KEYSTORE_PASSWORD
+                keyAlias System.env.OC_QA_KEY_ALIAS
+                keyPassword System.env.OC_QA_KEY_PASSWORD
+            }
+        }
         release {
             if (System.env.OC_RELEASE_KEYSTORE) {
                 storeFile file(System.env.OC_RELEASE_KEYSTORE)  // use an absolute path
@@ -177,6 +185,9 @@ android {
 
         debug {
             applicationIdSuffix ".debug"
+            if (System.env.OC_QA_KEYSTORE) {
+                signingConfig signingConfigs.personal
+            }
         }
     }
 

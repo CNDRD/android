@@ -28,12 +28,20 @@ jobs:
           packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
           log-accepted-android-sdk-licenses: false
       - uses: gradle/actions/setup-gradle@v4
+      - name: Restore permanent personal signing key
+        if: matrix.source == 'feature'
+        id: signing
+        env:
+          OC_QA_SIGNING_JSON: ${{ secrets.OC_QA_SIGNING_JSON }}
+        run: python3 .github/scripts/prepare-qa-signing.py
       - name: Build installable QA debug APK
-        run: ./gradlew :opencloudApp:assembleQaDebug
+        if: matrix.source == 'baseline' || steps.signing.outputs.ready == 'true'
+        run: ./gradlew :opencloudApp:assembleQaDebug -PversionCode=$((1000 + GITHUB_RUN_NUMBER))
       - name: Test startup layout and upload feedback
         if: matrix.source == 'feature'
         run: ./gradlew :opencloudApp:testQaDebugUnitTest --tests 'eu.opencloud.android.presentation.transfers.UploadFeedbackTrackerTest' --tests 'eu.opencloud.android.presentation.startup.StartupLayoutTest'
       - uses: actions/upload-artifact@v4
+        if: matrix.source == 'baseline' || steps.signing.outputs.ready == 'true'
         with:
           name: opencloud-${{ matrix.source }}-qa-debug
           path: opencloudApp/build/outputs/apk/qa/debug/*.apk
@@ -43,3 +51,6 @@ jobs:
         with:
           name: upload-feedback-test-results
           path: opencloudApp/build/reports/tests/
+      - name: Remove temporary private keystore
+        if: always() && matrix.source == 'feature'
+        run: rm -f "$RUNNER_TEMP/opencloud-personal-signing.p12"
