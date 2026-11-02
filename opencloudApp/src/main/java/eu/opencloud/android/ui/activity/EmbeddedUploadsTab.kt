@@ -20,6 +20,9 @@ internal class EmbeddedUploadsTab(
         manager.beginTransaction().apply {
             setCustomAnimations(0, 0)
             if (existing == null) add(R.id.uploads_fragment_container, fragment, TAG)
+            // Hidden fragments retain their views but stop contributing browser-only menu actions.
+            manager.fragments.filter { it.id == R.id.left_fragment_container || it.id == R.id.right_fragment_container }
+                .forEach { hide(it) }
             setMaxLifecycle(fragment, Lifecycle.State.RESUMED)
         }.commitNow()
         activity.findViewById<View>(R.id.uploads_fragment_container).isVisible = true
@@ -27,11 +30,12 @@ internal class EmbeddedUploadsTab(
 
     fun hide() {
         activity.findViewById<View>(R.id.uploads_fragment_container).isVisible = false
-        activity.supportFragmentManager.findFragmentByTag(TAG)?.let { fragment ->
-            activity.supportFragmentManager.beginTransaction()
-                .setMaxLifecycle(fragment, Lifecycle.State.STARTED)
-                .commitNow()
-        }
+        val manager = activity.supportFragmentManager
+        manager.beginTransaction().apply {
+            manager.findFragmentByTag(TAG)?.let { setMaxLifecycle(it, Lifecycle.State.STARTED) }
+            manager.fragments.filter { it.id == R.id.left_fragment_container || it.id == R.id.right_fragment_container }
+                .forEach { show(it) }
+        }.commitNow()
     }
 
     companion object {

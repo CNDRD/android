@@ -12,6 +12,8 @@ import androidx.fragment.app.FragmentActivity
 import eu.opencloud.android.R
 import eu.opencloud.android.ui.activity.EmbeddedUploadsTab
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -29,20 +31,26 @@ class EmbeddedUploadsTabTest {
         val controller = Robolectric.buildActivity(FragmentActivity::class.java).setup()
         val activity = controller.get()
         val root = FrameLayout(activity)
-        val browser = TextView(activity).apply { text = "folder and scroll state" }
+        val browser = FrameLayout(activity).apply { id = R.id.left_fragment_container }
         val navigation = View(activity)
         val uploads = FrameLayout(activity).apply { id = R.id.uploads_fragment_container }
         root.addView(browser)
         root.addView(uploads)
         root.addView(navigation)
         activity.setContentView(root)
+        val browserFragment = TestUploadsFragment()
+        activity.supportFragmentManager.beginTransaction().add(R.id.left_fragment_container, browserFragment).commitNow()
+        val browserView = browserFragment.requireView()
         val tab = EmbeddedUploadsTab(activity) { TestUploadsFragment() }
         tab.show()
         val uploadView = uploads.getChildAt(0)
         repeat(10) {
             tab.hide()
             assertEquals(View.GONE, uploads.visibility)
+            assertFalse(browserFragment.isHidden)
             tab.show()
+            assertTrue(browserFragment.isHidden)
+            assertSame(browserView, browserFragment.requireView())
             assertEquals(View.VISIBLE, uploads.visibility)
             assertSame(uploadView, uploads.getChildAt(0))
             assertSame(browser, root.getChildAt(0))
