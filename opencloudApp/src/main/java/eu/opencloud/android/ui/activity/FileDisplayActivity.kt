@@ -31,6 +31,7 @@ package eu.opencloud.android.ui.activity
 
 import android.Manifest.permission.POST_NOTIFICATIONS
 import android.accounts.Account
+import android.accounts.AccountManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -93,9 +94,11 @@ import eu.opencloud.android.extensions.showMessageInSnackbar
 import eu.opencloud.android.lib.common.accounts.AccountUtils
 import eu.opencloud.android.lib.common.authentication.OpenCloudBearerCredentials
 import eu.opencloud.android.lib.common.network.CertificateCombinedException
+import eu.opencloud.android.lib.common.operations.RemoteOperation
 import eu.opencloud.android.lib.common.operations.RemoteOperationResult
 import eu.opencloud.android.lib.common.operations.RemoteOperationResult.ResultCode
 import eu.opencloud.android.lib.resources.status.OpenCloudVersion
+import eu.opencloud.android.operations.CheckCurrentCredentialsOperation
 import eu.opencloud.android.operations.SyncProfileOperation
 import eu.opencloud.android.presentation.accounts.ManageAccountsViewModel
 import eu.opencloud.android.presentation.authentication.AccountUtils.getCurrentOpenCloudAccount
@@ -185,6 +188,8 @@ class FileDisplayActivity : FileActivity(),
 
     var fileListOption = FileListOption.ALL_FILES
     private var pendingBottomNavigationOption: FileListOption? = null
+    private var uploadsTabVisible = false
+    private lateinit var uploadsTab: EmbeddedUploadsTab
     private var waitingToSend: OCFile? = null
     private var waitingToOpen: OCFile? = null
 
@@ -274,6 +279,8 @@ class FileDisplayActivity : FileActivity(),
 
         leftFragmentContainer = findViewById(R.id.left_fragment_container)
         rightFragmentContainer = findViewById(R.id.right_fragment_container)
+        uploadsTab = EmbeddedUploadsTab(this)
+        uploadsTabVisible = savedInstanceState?.getBoolean(KEY_UPLOADS_TAB_VISIBLE) == true
 
         // Init Fragment without UI to retain AsyncTask across configuration changes
         val fm = supportFragmentManager
@@ -334,6 +341,7 @@ class FileDisplayActivity : FileActivity(),
             if (option != fileListOption) navigateTo(option)
             setCheckedItemAtBottomBar(getMenuItemForFileListOption(fileListOption))
         }
+        if (uploadsTabVisible) showUploadsTab()
         transfersViewModel.transfersStateFlow.value?.let { renderUploadFeedback(it) }
     }
 
@@ -583,10 +591,10 @@ class FileDisplayActivity : FileActivity(),
      * @param existsSecondFragment - true if showing details or preview of a file
      */
     private fun updateFragmentsVisibility(existsSecondFragment: Boolean) {
-        leftFragmentContainer?.isVisible = !existsSecondFragment
-        rightFragmentContainer?.isVisible = existsSecondFragment
+        leftFragmentContainer?.isVisible = !uploadsTabVisible && !existsSecondFragment
+        rightFragmentContainer?.isVisible = !uploadsTabVisible && existsSecondFragment
 
-        showBottomNavBar(show = !existsSecondFragment)
+        showBottomNavBar(show = uploadsTabVisible || !existsSecondFragment)
     }
 
     private fun cleanSecondFragment() {
@@ -612,6 +620,7 @@ class FileDisplayActivity : FileActivity(),
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        if (uploadsTabVisible) return false
         super.onCreateOptionsMenu(menu)
         // Allow or disallow touches with other visible windows
         val actionBarView = findViewById<View>(R.id.action_bar)
@@ -655,6 +664,13 @@ class FileDisplayActivity : FileActivity(),
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
         bayPassUnlockOnce()
+
+        // Upload retries now share the browser's activity, including credential renewal.
+        if (requestCode == REQUEST_CODE__UPDATE_CREDENTIALS && resultCode == RESULT_OK) {
+            data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)?.let { accountName ->
+                transfersViewModel.retryUploadsForAccount(accountName)
+            }
+        }
 
         // Handle calls form internal activities.
         if (requestCode == REQUEST_CODE__SELECT_CONTENT_FROM_APPS && (resultCode == RESULT_OK || resultCode == RESULT_OK_AND_MOVE)) {
@@ -722,8 +738,41 @@ class FileDisplayActivity : FileActivity(),
         }
     }
 
-    private fun openUploads() {
-        startActivity(Intent(this, UploadListActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+    override fun openUploads() {
+        if (supportFragmentManager.isStateSaved || account == null) return
+        uploadsTabVisible = true
+        mainFileListFragment?.collapseFab()
+        showUploadsTab()
+    }
+
+    private fun showUploadsTab() {
+        uploadsTab.show()
+        updateFragmentsVisibility(secondFragment != null)
+        setupRootToolbar(title = getString(R.string.uploads_view_title), isSearchEnabled = false, isAvatarRequested = true)
+        setCheckedItemAtBottomBar(R.id.nav_uploads)
+        invalidateOptionsMenu()
+    }
+
+    private fun hideUploadsTab() {
+        uploadsTabVisible = false
+        uploadsTab.hide()
+        updateFragmentsVisibility(secondFragment != null)
+        updateToolbar(file, mainFileListFragment?.getCurrentSpace())
+        invalidateOptionsMenu()
+    }
+
+    override fun onRemoteOperationFinish(operation: RemoteOperation<*>?, result: RemoteOperationResult<*>?) {
+        if (operation is CheckCurrentCredentialsOperation && result != null) {
+            fileOperationsHelper.setOpIdWaitingFor(Long.MAX_VALUE)
+            dismissLoadingDialog()
+            if (result.isSuccess) {
+                (result.data as? Account)?.let { transfersViewModel.retryUploadsForAccount(it.name) }
+            } else {
+                requestCredentialsUpdate()
+            }
+        } else {
+            super.onRemoteOperationFinish(operation, result)
+        }
     }
 
     private fun uploadMessageAnchor(): View = with(binding.navCoordinatorLayout) {
@@ -833,6 +882,11 @@ class FileDisplayActivity : FileActivity(),
     }
 
     override fun onBackPressed() {
+        if (uploadsTabVisible && !isDrawerOpen()) {
+            hideUploadsTab()
+            setCheckedItemAtBottomBar(getMenuItemForFileListOption(fileListOption))
+            return
+        }
         val isFabOpen = mainFileListFragment?.isFabExpanded() ?: false
 
         /*
@@ -897,6 +951,7 @@ class FileDisplayActivity : FileActivity(),
         outState.putParcelable(KEY_WAITING_TO_PREVIEW, fileWaitingToPreview)
         outState.putBoolean(KEY_SYNC_IN_PROGRESS, syncInProgress)
         outState.putParcelable(KEY_FILE_LIST_OPTION, fileListOption)
+        outState.putBoolean(KEY_UPLOADS_TAB_VISIBLE, uploadsTabVisible)
         //outState.putBoolean(KEY_REFRESH_SHARES_IN_PROGRESS,
         // mRefreshSharesInProgress);
         outState.putParcelable(KEY_WAITING_TO_SEND, waitingToSend)
@@ -909,14 +964,16 @@ class FileDisplayActivity : FileActivity(),
         Timber.v("onResume() start")
         super.onResume()
 
-        if (mainFileListFragment?.getCurrentSpace()?.isProject == true) {
+        if (uploadsTabVisible) {
+            setCheckedItemAtBottomBar(R.id.nav_uploads)
+        } else if (mainFileListFragment?.getCurrentSpace()?.isProject == true) {
             setCheckedItemAtBottomBar(getMenuItemForFileListOption(FileListOption.SPACES_LIST))
             updateToolbar(null, mainFileListFragment?.getCurrentSpace())
         } else {
             setCheckedItemAtBottomBar(getMenuItemForFileListOption(fileListOption))
         }
 
-        if (secondFragment == null) {
+        if (!uploadsTabVisible && secondFragment == null) {
             mainFileListFragment?.updateFileListOption(fileListOption, file)
 
             // refresh list of files
@@ -1065,6 +1122,7 @@ class FileDisplayActivity : FileActivity(),
     }
 
     private fun updateToolbar(chosenFileFromParam: OCFile?, space: OCSpace? = null) {
+        if (uploadsTabVisible) return
         val chosenFile = chosenFileFromParam ?: file // If no file is passed, current file decides
 
         // If we come from a preview activity (image or video), not updating toolbar when initializing this activity
@@ -1922,7 +1980,10 @@ class FileDisplayActivity : FileActivity(),
     }
 
     override fun navigateToOption(fileListOption: FileListOption) {
-        navigateTo(fileListOption)
+        val returningToBrowser = uploadsTabVisible
+        if (returningToBrowser) hideUploadsTab()
+        // Reveal the existing folder and scroll position when returning to the same browser tab.
+        if (!returningToBrowser || fileListOption != this.fileListOption) navigateTo(fileListOption)
     }
 
     private fun getMenuItemForFileListOption(fileListOption: FileListOption?): Int = when (fileListOption) {
@@ -2107,6 +2168,7 @@ class FileDisplayActivity : FileActivity(),
 
     private fun navigateToShortcutFolder() {
         val folder = shortcutFolderToNavigate ?: return
+        if (uploadsTabVisible) hideUploadsTab()
         shortcutFolderToNavigate = null
         fileListOption = FileListOption.ALL_FILES
         setFile(folder)
@@ -2211,6 +2273,7 @@ class FileDisplayActivity : FileActivity(),
         private const val KEY_WAITING_TO_SEND = "WAITING_TO_SEND"
         private const val KEY_UPLOAD_HELPER = "FILE_UPLOAD_HELPER"
         private const val KEY_FILE_LIST_OPTION = "FILE_LIST_OPTION"
+        private const val KEY_UPLOADS_TAB_VISIBLE = "UPLOADS_TAB_VISIBLE"
         const val MIMETYPE_TEXT_URI_LIST = "text/uri-list"
         const val KEY_DEEP_LINK_ACCOUNTS_CHECKED = "DEEP_LINK_ACCOUNTS_CHECKED"
 
