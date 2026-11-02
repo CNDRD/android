@@ -37,6 +37,25 @@ jobs:
       - name: Build installable QA debug APK
         if: matrix.source == 'baseline' || steps.signing.outputs.ready == 'true'
         run: ./gradlew :opencloudApp:assembleQaDebug -PversionCode=$((1000 + GITHUB_RUN_NUMBER))
+      - name: Verify permanent APK signing certificate
+        if: matrix.source == 'feature' && steps.signing.outputs.ready == 'true'
+        run: |
+          python3 - <<'PYTHON'
+          import os
+          from pathlib import Path
+          import re
+          import subprocess
+          apks = list(Path('opencloudApp/build/outputs/apk/qa/debug').glob('*.apk'))
+          if len(apks) != 1:
+              raise SystemExit('Expected exactly one personal APK')
+          signer = Path(os.environ['ANDROID_HOME']) / 'build-tools/36.0.0/apksigner'
+          result = subprocess.run([str(signer), 'verify', '--print-certs', str(apks[0])], capture_output=True, text=True, check=True)
+          digest = re.search(r'Signer #1 certificate SHA-256 digest: ([0-9a-fA-F]+)', result.stdout)
+          expected = Path('.github/qa-signing-certificate.sha256').read_text().strip()
+          if digest is None or digest.group(1).lower() != expected:
+              raise SystemExit('APK signing certificate mismatch; refusing to publish')
+          print('APK signature verified against the permanent certificate')
+          PYTHON
       - name: Test startup layout and upload feedback
         if: matrix.source == 'feature'
         run: ./gradlew :opencloudApp:testQaDebugUnitTest --tests 'eu.opencloud.android.presentation.transfers.UploadFeedbackTrackerTest' --tests 'eu.opencloud.android.presentation.startup.StartupLayoutTest'

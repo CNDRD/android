@@ -17,7 +17,7 @@ Local commands (JDK 17 and Android SDK required):
 
 Installable feature APKs require the repository Actions secret `OC_QA_SIGNING_JSON`. Its private JSON bundle contains `keystore_base64` (a PKCS12 keystore), `store_password`, `key_password`, and `key_alias`. Keep a private backup outside this repository. Never commit the bundle or upload it as a workflow artifact.
 
-The workflow restores this key only on the feature job. If the secret is absent, tests still run but no installable feature APK is published; the job summary explains setup. After adding the secret, rerun the feature job.
+The workflow restores this key only on the feature job. The public certificate fingerprint is pinned in `.github/qa-signing-certificate.sha256`, and both the restored key and the finished APK must match it before publication. If the secret is absent, tests still run but no installable feature APK is published; the job summary explains setup. After adding the secret, rerun the feature job.
 
 The package ID and account/provider authorities stay fixed. Each build uses version code `1000 + GITHUB_RUN_NUMBER`. Rerunning a workflow keeps its version code; subsequent workflow runs increase it. Use this workflow consistently for installable builds.
 
