@@ -181,8 +181,18 @@ class PreviewImageFragment : FileFragment() {
         file?.let {
             loadAndShowImage()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
         isOpen = true
         currentFilePreviewing = file
+    }
+
+    override fun onPause() {
+        isOpen = false
+        currentFilePreviewing = null
+        super.onPause()
     }
 
     /**
@@ -274,8 +284,6 @@ class PreviewImageFragment : FileFragment() {
         // {@link FragmentStatePagerAdapter} when the fragment in swiped further than the
         // valid offscreen distance, and onStop() is never called before than that
         super.onDestroy()
-        isOpen = false
-        currentFilePreviewing = null
     }
 
     /**

@@ -40,8 +40,8 @@ import java.util.HashSet
 class PreviewImagePagerAdapter(
     fragmentManager: FragmentManager,
     private val account: Account,
-    private val mImageFiles: MutableList<OCFile>
-) : FragmentStatePagerAdapter(fragmentManager) {
+    private val mMediaFiles: MutableList<OCFile>
+) : FragmentStatePagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
 
     private val mObsoleteFragments: MutableSet<Any>
     private val mObsoletePositions: MutableSet<Int>
@@ -56,16 +56,19 @@ class PreviewImagePagerAdapter(
     }
 
     /**
-     * Returns the image files handled by the adapter.
+     * Returns the media files handled by the adapter.
      *
-     * @return A vector with the image files handled by the adapter.
+     * @return The photos and videos handled by the adapter.
      */
-    fun getFileAt(position: Int): OCFile = mImageFiles[position]
+    fun getFileAt(position: Int): OCFile = mMediaFiles[position]
 
     override fun getItem(i: Int): Fragment {
-        val file = mImageFiles[i]
+        val file = mMediaFiles[i]
         val fragment: Fragment
         when {
+            file.isVideo -> {
+                fragment = PreviewVideoFragment.newInstance(file, account)
+            }
             file.isAvailableLocally -> {
                 fragment = PreviewImageFragment.newInstance(file, account, mObsoletePositions.contains(i))
             }
@@ -82,11 +85,13 @@ class PreviewImagePagerAdapter(
         return fragment
     }
 
-    fun getFilePosition(file: OCFile) = mImageFiles.indexOfFirst { file.id == it.id }
+    fun getFilePosition(file: OCFile) = mMediaFiles.indexOfFirst {
+        file.remotePath == it.remotePath && file.spaceId == it.spaceId
+    }
 
-    override fun getCount() = mImageFiles.size
+    override fun getCount() = mMediaFiles.size
 
-    override fun getPageTitle(position: Int): CharSequence = mImageFiles[position].fileName
+    override fun getPageTitle(position: Int): CharSequence = mMediaFiles[position].fileName
 
     private fun updateFile(position: Int, file: OCFile) {
         val fragmentToUpdate = mCachedFragments[position]
@@ -94,7 +99,7 @@ class PreviewImagePagerAdapter(
             mObsoleteFragments.add(fragmentToUpdate)
         }
         mObsoletePositions.add(position)
-        mImageFiles[position] = file
+        mMediaFiles[position] = file
     }
 
     private fun updateWithDownloadError(position: Int) {
@@ -142,7 +147,7 @@ class PreviewImagePagerAdapter(
         while (entries.hasNext()) {
             val fileFragment = entries.next()
             if (fileFragment is PreviewImageFragment) {
-                fileFragment.getImageView().setScale(1f, true)
+                fileFragment.view?.let { fileFragment.getImageView().setScale(1f, true) }
             }
         }
     }
@@ -150,6 +155,12 @@ class PreviewImagePagerAdapter(
     fun onDownloadEvent(file: OCFile, action: String, success: Boolean) {
         val position = getFilePosition(file)
         if (position >= 0) {
+            // Streaming video pages must not be recreated by background download progress.
+            if (mMediaFiles[position].isVideo || action != eu.opencloud.android.usecases.transfers.DOWNLOAD_FINISH_MESSAGE) {
+                if (success) mMediaFiles[position] = file
+                mCachedFragments[position]?.onSyncEvent(action, success, file)
+                return
+            }
             if (success) {
                 updateFile(position, file)
             } else {

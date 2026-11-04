@@ -71,7 +71,7 @@ import org.koin.core.parameter.parametersOf
 import timber.log.Timber
 
 /**
- * Holds a swiping galley where image files contained in an openCloud directory are shown
+ * Holds a swipeable gallery of photos and videos from an OpenCloud directory
  */
 class PreviewImageActivity : FileActivity(),
     FileFragment.ContainerActivity,
@@ -194,9 +194,9 @@ class PreviewImageActivity : FileActivity(),
         val sortType = sharedPreferencesProvider.getInt(SortType.PREF_FILE_LIST_SORT_TYPE, SortType.SORT_TYPE_BY_NAME.ordinal)
         val sortOrder = sharedPreferencesProvider.getInt(SortOrder.PREF_FILE_LIST_SORT_ORDER, SortOrder.SORT_ORDER_ASCENDING.ordinal)
         val sortFilesUseCase: SortFilesUseCase by inject()
-        val imageFiles = sortFilesUseCase(
+        val mediaFiles = sortFilesUseCase(
             SortFilesUseCase.Params(
-                listOfFiles = storageManager.getFolderImages(parentFolder),
+                listOfFiles = galleryMediaFiles(storageManager.getFolderContent(parentFolder), file),
                 sortType = eu.opencloud.android.domain.files.usecases.SortType.fromPreferences(sortType),
                 ascending = SortOrder.fromPreference(sortOrder) == SortOrder.SORT_ORDER_ASCENDING
             )
@@ -204,7 +204,7 @@ class PreviewImageActivity : FileActivity(),
         previewImagePagerAdapter = PreviewImagePagerAdapter(
             supportFragmentManager,
             account,
-            imageFiles.toMutableList()
+            mediaFiles.toMutableList()
         )
 
         viewPager = findViewById(R.id.fragmentPager)
@@ -300,13 +300,15 @@ class PreviewImageActivity : FileActivity(),
      * @param position Position index of the new selected page
      */
     override fun onPageSelected(position: Int) {
+        if (isFinishing || isDestroyed || position != viewPager.currentItem) return
         Timber.d("onPageSelected %s", position)
         if (operationsServiceBinder != null) {
             savedPosition = position
             hasSavedPosition = true
             val currentFile = previewImagePagerAdapter.getFileAt(position)
+            setFile(currentFile)
             updateActionBarTitle(currentFile.fileName)
-            if (!previewImagePagerAdapter.pendingErrorAt(position)) {
+            if (currentFile.isImage && !previewImagePagerAdapter.pendingErrorAt(position)) {
                 fileOperationsViewModel.performOperation(FileOperation.SynchronizeFileOperation(currentFile, account.name))
             }
 
@@ -357,7 +359,7 @@ class PreviewImageActivity : FileActivity(),
 
         /// Validate handled file  (first image to preview)
         checkNotNull(file) { "Instanced with a NULL OCFile" }
-        require(file.isImage) { "Non-image file passed as argument" }
+        require(file.isImage || file.isVideo) { "Non-media file passed as argument" }
 
         // Update file according to DB file, if it is possible
         if (file.id!! > ROOT_PARENT_ID) {
@@ -372,6 +374,17 @@ class PreviewImageActivity : FileActivity(),
             // handled file not in the current Account
             finish()
         }
+    }
+
+    fun setVideoControlsVisible(visible: Boolean) {
+        mHideSystemUiHandler.removeMessages(0)
+        if (visible) showSystemUI(fullScreenAnchorView) else hideSystemUI(fullScreenAnchorView)
+        showActionBar(visible)
+    }
+
+    override fun onDestroy() {
+        mHideSystemUiHandler.removeCallbacksAndMessages(null)
+        super.onDestroy()
     }
 
     private fun hideSystemUI(anchorView: View?) {

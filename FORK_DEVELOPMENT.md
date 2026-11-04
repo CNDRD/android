@@ -42,3 +42,14 @@ Other unit-test workflows may compile with disposable debug keys internally, but
 6. Check the status banner in light/dark themes and with large text.
 
 No device checks have been performed in the execution environment. Photo/video thumbnail improvements are intentionally a separate milestone; this change does not alter thumbnail requests or server behavior.
+
+
+## Mixed photo/video gallery
+
+The image gallery also accepts videos, using the same folder sort preferences. Opening either kind selects that item in the mixed gallery. Uncached videos stream through the existing authenticated WebDAV media source; downloaded videos use local storage. A missing parent cache retains the opened item instead of creating an empty pager.
+
+Only the selected page is resumed. Video pages release the player and cancel pending preparation when swiped away or backgrounded, retaining position, pause state and playback speed. The custom controls provide central play/pause and ten-second seeking, a scrubber, duration, speed/audio settings and immersive mode. Video errors offer an inline retry. Existing sharing, offline, removal and details actions remain available.
+
+Run `:opencloudApp:testQaDebugUnitTest --tests 'eu.opencloud.android.ui.preview.*'` for the new regression tests, then the existing startup/navigation and Material 3 tests. The feature APK workflow includes both groups. Build the signed QA APK and run these tests before phone verification.
+
+Phone checks: open a video directly in a mixed folder; swipe photo → video → photo and between two videos; scrub and pause; swipe away and back; rotate; background and resume; retry after disconnecting; exercise both sort directions and a Space folder; verify the previous folder-back fix and upload navigation. Verify installation as an update with the permanent certificate.

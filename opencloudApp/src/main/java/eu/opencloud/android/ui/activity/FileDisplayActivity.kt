@@ -1851,10 +1851,10 @@ class FileDisplayActivity : FileActivity(),
      * in milliseconds.
      */
     fun startVideoPreview(file: OCFile, startPlaybackPosition: Int) {
-        val videoActivityIntent = Intent(this, PreviewVideoActivity::class.java)
-        videoActivityIntent.putExtra(PreviewVideoActivity.EXTRA_FILE, file)
-        videoActivityIntent.putExtra(PreviewVideoActivity.EXTRA_ACCOUNT, account)
-        videoActivityIntent.putExtra(PreviewVideoActivity.EXTRA_PLAY_POSITION, startPlaybackPosition)
+        val videoActivityIntent = Intent(this, PreviewImageActivity::class.java)
+        videoActivityIntent.putExtra(EXTRA_FILE, file)
+        videoActivityIntent.putExtra(EXTRA_ACCOUNT, account)
+        videoActivityIntent.putExtra(PreviewVideoActivity.EXTRA_PLAY_POSITION, startPlaybackPosition.toLong())
         startActivity(videoActivityIntent)
     }
 
