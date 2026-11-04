@@ -14,7 +14,6 @@ import androidx.media3.ui.PlayerView
 import androidx.test.core.app.ApplicationProvider
 import eu.opencloud.android.R
 import eu.opencloud.android.testutil.OC_FILE
-import eu.opencloud.android.testutil.OC_FILE_DOWNLOADED
 import eu.opencloud.android.usecases.transfers.DOWNLOAD_ADDED_MESSAGE
 import io.mockk.every
 import io.mockk.mockk
@@ -26,11 +25,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 @Config(application = Application::class, sdk = [28])
 class MediaGalleryTest {
-    private val photo = OC_FILE_DOWNLOADED.copy(id = 1, remotePath = "/photo.jpg")
+    private val photo = OC_FILE.copy(id = 1, remotePath = "/photo.jpg")
     private val video = OC_FILE.copy(id = 2, remotePath = "/clip.mp4", mimeType = "video/mp4")
     private val nextPhoto = photo.copy(id = 3, remotePath = "/next.jpg")
 
@@ -49,9 +49,24 @@ class MediaGalleryTest {
     fun `opening a video selects its page and uses streaming even without local content`() {
         val adapter = adapter()
         assertEquals(1, adapter.getFilePosition(video))
-        assertTrue(adapter.getItem(0) is PreviewImageFragment)
+        assertTrue(adapter.getItem(0) is FileDownloadFragment)
         assertTrue(adapter.getItem(1) is PreviewVideoFragment)
-        assertTrue(adapter.getItem(2) is PreviewImageFragment)
+        assertTrue(adapter.getItem(2) is FileDownloadFragment)
+    }
+
+    @Test
+    fun `downloaded photos still use the image viewer`() {
+        val localFile = File.createTempFile("gallery", ".jpg")
+        try {
+            val adapter = PreviewImagePagerAdapter(
+                mockk<FragmentManager>(), Account("test", "test"),
+                mutableListOf(photo.copy(storagePath = localFile.absolutePath), video)
+            )
+            assertTrue(adapter.getItem(0) is PreviewImageFragment)
+            assertTrue(adapter.getItem(1) is PreviewVideoFragment)
+        } finally {
+            localFile.delete()
+        }
     }
 
     @Test
