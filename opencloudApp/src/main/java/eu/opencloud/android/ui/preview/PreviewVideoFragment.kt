@@ -59,7 +59,9 @@ class PreviewVideoFragment : FileFragment(), Player.Listener, PrepareVideoPlayer
         playbackPosition = savedInstanceState?.getLong(ARG_POSITION)
             ?: if (file == activity?.intent?.getParcelableExtra<OCFile>(eu.opencloud.android.ui.activity.FileActivity.EXTRA_FILE)) {
                 activity?.intent?.getLongExtra(PreviewVideoActivity.EXTRA_PLAY_POSITION, 0L) ?: 0L
-            } else 0L
+            } else {
+                0L
+            }
         playWhenReady = savedInstanceState?.getBoolean(ARG_PLAY, true) ?: true
         playbackSpeed = savedInstanceState?.getFloat(ARG_SPEED, 1f) ?: 1f
         setHasOptionsMenu(true)
@@ -137,7 +139,7 @@ class PreviewVideoFragment : FileFragment(), Player.Listener, PrepareVideoPlayer
         newPlayer.addListener(this)
         playerView?.player = newPlayer
         val account = requireArguments().getParcelable<Account>(ARG_ACCOUNT)
-        prepareTask = PrepareVideoPlayerAsyncTask(requireContext().applicationContext, this, file, account).also { it.execute() }
+        prepareTask = PrepareVideoPlayerAsyncTask(requireContext().applicationContext, this, file, account).apply { execute() }
     }
 
     override fun OnPrepareVideoPlayerTaskCallback(mediaSource: MediaSource?) {
@@ -199,7 +201,9 @@ class PreviewVideoFragment : FileFragment(), Player.Listener, PrepareVideoPlayer
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.action_share_file -> mContainerActivity.fileOperationsHelper.showShareFile(file)
+            R.id.action_share_file -> {
+                mContainerActivity.fileOperationsHelper.showShareFile(file)
+            }
             R.id.action_open_file_with -> {
                 player?.pause()
                 mContainerActivity.fileOperationsHelper.openFile(file)
@@ -216,7 +220,9 @@ class PreviewVideoFragment : FileFragment(), Player.Listener, PrepareVideoPlayer
                 player?.pause()
                 requireActivity().sendDownloadedFilesByShareSheet(listOf(file))
             }
-            R.id.action_sync_file, R.id.action_download_file -> mContainerActivity.fileOperationsHelper.syncFile(file)
+            R.id.action_sync_file, R.id.action_download_file -> {
+                mContainerActivity.fileOperationsHelper.syncFile(file)
+            }
             R.id.action_set_available_offline -> {
                 operationsViewModel.performOperation(FileOperation.SetFilesAsAvailableOffline(listOf(file)))
                 Snackbar.make(requireView(), R.string.confirmation_set_available_offline, Snackbar.LENGTH_LONG).show()
@@ -225,7 +231,9 @@ class PreviewVideoFragment : FileFragment(), Player.Listener, PrepareVideoPlayer
                 operationsViewModel.performOperation(FileOperation.UnsetFilesAsAvailableOffline(listOf(file)))
                 Snackbar.make(requireView(), R.string.confirmation_unset_available_offline, Snackbar.LENGTH_LONG).show()
             }
-            else -> return super.onOptionsItemSelected(item)
+            else -> {
+                return super.onOptionsItemSelected(item)
+            }
         }
         return true
     }
