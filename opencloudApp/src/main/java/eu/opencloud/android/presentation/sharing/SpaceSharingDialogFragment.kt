@@ -191,7 +191,9 @@ class SpaceSharingDialogFragment : DialogFragment() {
         }
         status.text = if (error is SharingHttpException) {
             getString(message) + " (HTTP ${error.statusCode})"
-        } else getString(message)
+        } else {
+            getString(message)
+        }
     }
 
     private fun setBusy(busy: Boolean) {
