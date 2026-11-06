@@ -365,9 +365,13 @@ class MainFileListFragment : Fragment(),
             updateActionModeAfterTogglingSelected()
             true
         }
-        if (isPickingAFolder() || getCurrentSpace()?.isPersonal == false) {
+        if (isPickingAFolder()) {
             menu.findItem(R.id.action_share_current_folder)?.itemId?.let { menu.removeItem(it) }
         } else {
+            menu.findItem(R.id.action_share_current_folder)?.apply {
+                setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_NEVER)
+                if (getCurrentSpace()?.isProject == true) setTitle(R.string.space_share_title)
+            }
             menu.findItem(R.id.action_share_current_folder)?.setOnMenuItemClickListener {
                 fileActions?.onShareFileClicked(mainFileListViewModel.getFile())
                 true

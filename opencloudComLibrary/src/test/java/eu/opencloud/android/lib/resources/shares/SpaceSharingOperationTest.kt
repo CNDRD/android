@@ -5,9 +5,10 @@ import androidx.test.core.app.ApplicationProvider
 import eu.opencloud.android.lib.common.OpenCloudClient
 import eu.opencloud.android.lib.common.authentication.OpenCloudCredentialsFactory
 import eu.opencloud.android.lib.resources.spaces.SpaceSharingOperation
+import eu.opencloud.android.lib.resources.spaces.SpaceShareUser
+import eu.opencloud.android.lib.resources.spaces.SearchSpaceShareUsersOperation
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.*
@@ -39,9 +40,12 @@ class SpaceSharingOperationTest {
 
     @Test fun `folder invitation uses item id and internal user body`() {
         server.enqueue(MockResponse().setBody("{\"value\":[{\"id\":\"grant\"}]}"))
-        val body = JSONObject().put("recipients", JSONArray().put(
-            JSONObject().put("objectId", "user-id").put("@libre.graph.recipient.type", "user")
-        )).put("roles", JSONArray().put("server-role-id"))
+        val users = SpaceShareUser.fromResponse(JSONObject("""{"value":[
+            {"id":"user-id","displayName":"Jane","onPremisesSamAccountName":"jane","userType":"Member"},
+            {"id":"external-id","displayName":"Remote Jane","userType":"Federated"}
+        ]}"""))
+        assertEquals(1, users.size)
+        val body = users.single().invitation("server-role-id")
         assertTrue(SpaceSharingOperation("drive", "drive!folder", body).execute(client()).isSuccess)
         val request = server.takeRequest()
         assertEquals("POST", request.method)
@@ -54,6 +58,17 @@ class SpaceSharingOperationTest {
 
     @Test fun `forbidden invitation is not reported as success`() {
         server.enqueue(MockResponse().setResponseCode(403).setBody("{}"))
-        assertFalse(SpaceSharingOperation("drive", null, JSONObject()).execute(client()).isSuccess)
+        val result = SpaceSharingOperation("drive", null, JSONObject()).execute(client())
+        assertFalse(result.isSuccess)
+        assertEquals(403, result.httpCode)
     }
+    @Test fun `user search uses same server Graph directory and excludes federated users`() {
+        server.enqueue(MockResponse().setBody("{\"value\":[]}"))
+        assertTrue(SearchSpaceShareUsersOperation("Jane Doe").execute(client()).isSuccess)
+        val request = server.takeRequest()
+        assertEquals(listOf("cloud", "graph", "v1.0", "users"), request.requestUrl!!.pathSegments)
+        assertEquals("Jane Doe", request.requestUrl!!.queryParameter("\$search"))
+        assertEquals("userType eq 'Member'", request.requestUrl!!.queryParameter("\$filter"))
+    }
+
 }

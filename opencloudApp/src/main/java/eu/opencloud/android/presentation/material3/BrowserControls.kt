@@ -2,14 +2,13 @@
 
 package eu.opencloud.android.presentation.material3
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalIconButton
@@ -31,6 +30,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.opencloud.android.R
 import eu.opencloud.android.presentation.files.SortOptionsView.AdditionalView
@@ -55,16 +55,16 @@ fun BrowserControls(
     var densityExpanded by remember { mutableStateOf(false) }
     Surface(color = MaterialTheme.colorScheme.surface) {
         Row(
-            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 4.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box {
+            Box(Modifier.weight(1f)) {
                 TextButton(
                     onClick = { if (onSort != null) sortExpanded = true else onLegacySort() },
                     modifier = Modifier.testTag("browser_sort"),
                 ) {
-                    Text(stringResource(sortType.toStringRes()))
+                    Text(stringResource(sortType.toStringRes()), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Icon(
                         painterResource(sortOrder.toDrawableRes()),
                         contentDescription = stringResource(
@@ -99,36 +99,42 @@ fun BrowserControls(
                     }
                 }
             }
-            if (onDensity != null && additionalView == AdditionalView.VIEW_TYPE) {
-                Box {
-                    TextButton(onClick = { densityExpanded = true }, modifier = Modifier.testTag("browser_density")) {
-                        Text(if (columns == 0) stringResource(R.string.grid_density_title)
-                        else pluralStringResource(R.plurals.grid_density_columns, columns, columns))
-                    }
-                    DropdownMenu(expanded = densityExpanded, onDismissRequest = { densityExpanded = false }) {
-                        listOf(0, 2, 3, 4, 5, 6).forEach { count ->
-                            DropdownMenuItem(
-                                text = { Text(if (count == 0) stringResource(R.string.grid_density_automatic)
-                                else pluralStringResource(R.plurals.grid_density_columns, count, count)) },
-                                leadingIcon = { RadioButton(selected = columns == count, onClick = null) },
-                                onClick = { onDensity(count); densityExpanded = false },
-                                modifier = Modifier.testTag("density_$count"),
-                            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (onDensity != null && additionalView == AdditionalView.VIEW_TYPE) {
+                    Box {
+                        TextButton(onClick = { densityExpanded = true }, modifier = Modifier.widthIn(max = 168.dp).testTag("browser_density")) {
+                            Text(if (columns == 0) stringResource(R.string.grid_density_title)
+                            else pluralStringResource(R.plurals.grid_density_columns, columns, columns),
+                                maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                        DropdownMenu(expanded = densityExpanded, onDismissRequest = { densityExpanded = false }) {
+                            listOf(0, 2, 3, 4, 5, 6).forEach { count ->
+                                DropdownMenuItem(
+                                    text = { Text(if (count == 0) stringResource(R.string.grid_density_automatic)
+                                    else pluralStringResource(R.plurals.grid_density_columns, count, count)) },
+                                    leadingIcon = { RadioButton(selected = columns == count, onClick = null) },
+                                    onClick = { onDensity(count); densityExpanded = false },
+                                    modifier = Modifier.testTag("density_$count"),
+                                )
+                            }
                         }
                     }
                 }
-            }
-            when (additionalView) {
-                AdditionalView.VIEW_TYPE -> FilledTonalIconButton(onClick = onViewType, modifier = Modifier.testTag("browser_view")) {
-                    Icon(
-                        painterResource(viewType.getOppositeViewType().toDrawableRes()),
-                        stringResource(if (viewType == ViewType.VIEW_TYPE_LIST) R.string.m3_show_grid else R.string.m3_show_list),
-                    )
+                when (additionalView) {
+                    AdditionalView.VIEW_TYPE -> FilledTonalIconButton(onClick = onViewType, modifier = Modifier.testTag("browser_view")) {
+                        Icon(
+                            painterResource(viewType.getOppositeViewType().toDrawableRes()),
+                            stringResource(if (viewType == ViewType.VIEW_TYPE_LIST) R.string.m3_show_grid else R.string.m3_show_list),
+                        )
+                    }
+                    AdditionalView.CREATE_FOLDER -> FilledTonalIconButton(onClick = onCreateFolder) {
+                        Icon(painterResource(R.drawable.ic_action_create_dir), stringResource(R.string.content_description_create_new_folder))
+                    }
+                    AdditionalView.HIDDEN -> Unit
                 }
-                AdditionalView.CREATE_FOLDER -> FilledTonalIconButton(onClick = onCreateFolder) {
-                    Icon(painterResource(R.drawable.ic_action_create_dir), stringResource(R.string.content_description_create_new_folder))
-                }
-                AdditionalView.HIDDEN -> Unit
             }
         }
     }

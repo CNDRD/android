@@ -12,4 +12,11 @@
     <string name="space_share_not_allowed">Zde nemáš oprávnění přidávat přístup, nebo server nenabízí role pro sdílení.</string>
     <string name="space_share_error">Sdílení se nepodařilo dokončit. Zkontroluj připojení a oprávnění a zkus to znovu.</string>
     <string name="space_share_success">Přístup přidán.</string>
+    <string name="space_share_success_refresh_failed">Přístup přidán. Pro obnovení seznamu uživatelů znovu otevři sdílení.</string>
+    <string name="space_share_invalid">Server odmítl uživatele nebo oprávnění. Vyhledej uživatele znovu.</string>
+    <string name="space_share_unauthorized">Přihlášení už není platné. Přihlas se znovu.</string>
+    <string name="space_share_forbidden">Nemáš oprávnění sdílet tento Space nebo složku.</string>
+    <string name="space_share_unavailable">Sdílení nebo vybraná položka není na tomto serveru dostupná.</string>
+    <string name="space_share_conflict">Přístup už existuje nebo je v konfliktu s jiným oprávněním.</string>
+    <string name="space_share_server_error">Server nedokázal dokončit sdílení. Zkus to později.</string>
 </resources>

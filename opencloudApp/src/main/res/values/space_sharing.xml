@@ -12,4 +12,11 @@
     <string name="space_share_not_allowed">You cannot grant access here, or the server offers no sharing roles.</string>
     <string name="space_share_error">Could not complete sharing. Check your connection and permissions, then try again.</string>
     <string name="space_share_success">Access granted.</string>
+    <string name="space_share_success_refresh_failed">Access granted. Reopen sharing to refresh the recipient list.</string>
+    <string name="space_share_invalid">The server rejected the user or access level. Search for the user again.</string>
+    <string name="space_share_unauthorized">Your session is no longer authorized. Sign in again.</string>
+    <string name="space_share_forbidden">You do not have permission to share this Space or folder.</string>
+    <string name="space_share_unavailable">The sharing endpoint or selected item is unavailable on this server.</string>
+    <string name="space_share_conflict">Access already exists or conflicts with an existing permission.</string>
+    <string name="space_share_server_error">The server could not complete sharing. Try again later.</string>
 </resources>

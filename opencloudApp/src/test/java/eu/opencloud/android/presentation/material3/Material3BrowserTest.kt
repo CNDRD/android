@@ -27,6 +27,18 @@ class Material3BrowserTest {
     val compose = createComposeRule()
 
     @Test
+    fun `sort stays left and column settings sit on the right of the same row`() {
+        controls(onDensity = {})
+        val sort = compose.onNodeWithTag("browser_sort").fetchSemanticsNode().boundsInRoot
+        val density = compose.onNodeWithTag("browser_density").fetchSemanticsNode().boundsInRoot
+        val view = compose.onNodeWithTag("browser_view").fetchSemanticsNode().boundsInRoot
+        assertTrue(density.left >= sort.right)
+        assertTrue(view.left >= density.right)
+        assertEquals(sort.center.y, density.center.y, 1f)
+        assertEquals(density.center.y, view.center.y, 1f)
+    }
+
+    @Test
     fun `density selection reaches the file browser callback`() {
         var columns = 0
         controls(onDensity = { columns = it })

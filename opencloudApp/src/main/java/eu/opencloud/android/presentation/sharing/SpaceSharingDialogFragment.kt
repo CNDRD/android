@@ -16,7 +16,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import eu.opencloud.android.R
 import eu.opencloud.android.data.ClientManager
 import eu.opencloud.android.data.executeRemoteOperation
-import eu.opencloud.android.lib.resources.shares.responses.ShareeItem
+import eu.opencloud.android.lib.resources.spaces.SpaceShareUser
+import eu.opencloud.android.lib.resources.spaces.SearchSpaceShareUsersOperation
+import eu.opencloud.android.lib.common.operations.RemoteOperationResult
 import eu.opencloud.android.lib.resources.spaces.SpaceSharingOperation
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +39,7 @@ class SpaceSharingDialogFragment : DialogFragment() {
     private lateinit var users: Spinner
     private lateinit var roles: Spinner
     private lateinit var add: Button
-    private var recipients = emptyList<ShareeItem>()
+    private var recipients = emptyList<SpaceShareUser>()
     private var roleIds = emptyList<String>()
     private val accountName get() = requireArguments().getString("account")!!
 
@@ -74,13 +76,13 @@ class SpaceSharingDialogFragment : DialogFragment() {
     }
 
     private suspend fun graph(invitation: JSONObject? = null): JSONObject = withContext(Dispatchers.IO) {
-        val response = executeRemoteOperation {
+        val response = checkedResponse(
             SpaceSharingOperation(
                 requireArguments().getString("drive")!!,
                 requireArguments().getString("item"),
                 invitation,
             ).execute(clients.getClientForSpaceSharing(accountName))
-        }
+        )
         JSONObject(response)
     }
 
@@ -103,11 +105,13 @@ class SpaceSharingDialogFragment : DialogFragment() {
             return@runRequest
         }
         val response = withContext(Dispatchers.IO) {
-            executeRemoteOperation { clients.getShareeService(accountName).getSharees(query, 1, 100) }
+            checkedResponse(SearchSpaceShareUsersOperation(query)
+                .execute(clients.getClientForSpaceSharing(accountName)))
         }
-        recipients = ((response.exact?.users ?: emptyList()) + response.users)
-            .filter { it.value.shareType == 0 }.distinctBy { it.value.shareWith }
-        users.adapter = adapter(recipients.map { "${it.label} (${it.value.shareWith})" })
+        recipients = SpaceShareUser.fromResponse(JSONObject(response))
+        users.adapter = adapter(recipients.map { user ->
+            if (user.username.isBlank()) user.name else "${user.name} (${user.username})"
+        })
         status.setText(if (recipients.isEmpty()) R.string.space_share_no_users else R.string.space_share_internal)
     }
 
@@ -115,15 +119,17 @@ class SpaceSharingDialogFragment : DialogFragment() {
         val recipient = recipients.getOrNull(users.selectedItemPosition) ?: return
         val role = roleIds.getOrNull(roles.selectedItemPosition) ?: return
         runRequest {
-            val response = graph(JSONObject().put("recipients", JSONArray().put(
-                JSONObject().put("objectId", recipient.value.shareWith)
-                    .put("@libre.graph.recipient.type", "user")
-            )).put("roles", JSONArray().put(role)))
+            val response = graph(recipient.invitation(role))
             check(response.optJSONArray("value")?.length()?.let { it > 0 } == true)
-            // Refresh from the server, including after re-opening, instead of claiming optimistic success.
-            val permissions = graph()
-            members.text = permissionLabels(permissions).joinToString("\n")
             status.setText(R.string.space_share_success)
+            try {
+                members.text = permissionLabels(graph()).joinToString("\n")
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w(e, "Share granted, but refreshing recipients failed")
+                status.setText(R.string.space_share_success_refresh_failed)
+            }
         }
     }
 
@@ -159,11 +165,33 @@ class SpaceSharingDialogFragment : DialogFragment() {
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "Internal Space sharing request failed")
-                status.setText(R.string.space_share_error)
+                showRequestError(e)
             } finally {
                 setBusy(false)
             }
         }
+    }
+
+    private class SharingHttpException(val statusCode: Int) : Exception("Sharing HTTP $statusCode")
+
+    private fun checkedResponse(result: RemoteOperationResult<String>): String {
+        if (!result.isSuccess && result.httpCode >= 400) throw SharingHttpException(result.httpCode)
+        return executeRemoteOperation { result }
+    }
+
+    private fun showRequestError(error: Exception) {
+        val message = when ((error as? SharingHttpException)?.statusCode) {
+            400, 422 -> R.string.space_share_invalid
+            401 -> R.string.space_share_unauthorized
+            403 -> R.string.space_share_forbidden
+            404, 405, 501 -> R.string.space_share_unavailable
+            409 -> R.string.space_share_conflict
+            null -> R.string.space_share_error
+            else -> R.string.space_share_server_error
+        }
+        status.text = if (error is SharingHttpException) {
+            getString(message) + " (HTTP ${error.statusCode})"
+        } else getString(message)
     }
 
     private fun setBusy(busy: Boolean) {
