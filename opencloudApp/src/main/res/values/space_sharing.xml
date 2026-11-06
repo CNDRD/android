@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="space_share_title">Share with users</string>
+    <string name="space_share_search">Enter a username</string>
+    <string name="space_share_user">User on this OpenCloud</string>
+    <string name="space_share_role">Access level</string>
+    <string name="space_share_add">Grant access</string>
+    <string name="space_share_find">Find user</string>
+    <string name="space_share_close">Close</string>
+    <string name="space_share_internal">Only users on this OpenCloud can receive access.</string>
+    <string name="space_share_no_users">No matching users found.</string>
+    <string name="space_share_not_allowed">You cannot grant access here, or the server offers no sharing roles.</string>
+    <string name="space_share_error">Could not complete sharing. Check your connection and permissions, then try again.</string>
+    <string name="space_share_success">Access granted.</string>
+</resources>

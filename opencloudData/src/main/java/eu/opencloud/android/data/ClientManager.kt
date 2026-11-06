@@ -160,6 +160,8 @@ class ClientManager(
         return OCShareeService(client = openCloudClient)
     }
 
+    fun getClientForSpaceSharing(accountName: String) = getClientForAccount(accountName)
+
     fun getSpacesService(accountName: String): SpacesService {
         val openCloudClient = getClientForAccount(accountName)
         return OCSpacesService(client = openCloudClient)

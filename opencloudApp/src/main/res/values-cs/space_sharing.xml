@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="space_share_title">Sdílet s uživateli</string>
+    <string name="space_share_search">Zadej uživatelské jméno</string>
+    <string name="space_share_user">Uživatel tohoto OpenCloudu</string>
+    <string name="space_share_role">Oprávnění</string>
+    <string name="space_share_add">Přidat přístup</string>
+    <string name="space_share_find">Najít uživatele</string>
+    <string name="space_share_close">Zavřít</string>
+    <string name="space_share_internal">Přístup mohou získat pouze uživatelé tohoto OpenCloudu.</string>
+    <string name="space_share_no_users">Žádní odpovídající uživatelé.</string>
+    <string name="space_share_not_allowed">Zde nemáš oprávnění přidávat přístup, nebo server nenabízí role pro sdílení.</string>
+    <string name="space_share_error">Sdílení se nepodařilo dokončit. Zkontroluj připojení a oprávnění a zkus to znovu.</string>
+    <string name="space_share_success">Přístup přidán.</string>
+</resources>

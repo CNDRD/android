@@ -75,6 +75,12 @@
                 android:textSize="15sp"
                 tools:text="Subtitle" />
 
+            <Button
+                android:id="@+id/spaces_list_item_share"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/space_share_title" />
+
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>

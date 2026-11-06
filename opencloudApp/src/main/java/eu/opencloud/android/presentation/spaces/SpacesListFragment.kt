@@ -133,6 +133,12 @@ class SpacesListFragment : SpacesListAdapter.SpacesListAdapterListener, Fragment
         }
     }
 
+    override fun onShareClick(ocSpace: OCSpace) {
+        eu.opencloud.android.presentation.sharing.SpaceSharingDialogFragment.show(
+            requireActivity(), ocSpace.accountName, ocSpace.id, null, ocSpace.name
+        )
+    }
+
     override fun onItemClick(ocSpace: OCSpace) {
         spacesListViewModel.getRootFileForSpace(ocSpace)
     }

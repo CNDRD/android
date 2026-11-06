@@ -53,3 +53,10 @@ Only the selected page is resumed. Video pages release the player and cancel pen
 Run `:opencloudApp:testQaDebugUnitTest --tests 'eu.opencloud.android.ui.preview.*'` for the new regression tests, then the existing startup/navigation and Material 3 tests. The feature APK workflow includes both groups. Build the signed QA APK and run these tests before phone verification.
 
 Phone checks: open a video directly in a mixed folder; swipe photo → video → photo and between two videos; scrub and pause; swipe away and back; rotate; background and resume; retry after disconnecting; exercise both sort directions and a Space folder; verify the previous folder-back fix and upload navigation. Verify installation as an update with the permanent certificate.
+
+
+## Internal sharing in Spaces
+
+Each project Space card offers “Share with users”. File/folder sharing for Space-backed items uses the authenticated Graph v1beta1 permissions/invite endpoints and opaque drive/item IDs, rather than ambiguous paths. The dialog searches existing same-server users, excludes groups and federated recipients, and offers only role IDs returned by the server. It lists current recipients and refreshes after a successful grant. It never calls createLink. Existing server authorization remains authoritative; the share action in folder menus still requires reshare permission.
+
+Validate the signed feature APK on a server: share a project Space, share one nested folder without granting the whole Space, choose a viewer/editor role, confirm access using the recipient account, test a user without sharing rights and a failed connection. Check duplicate folder names in two Spaces and rotation during a request. Permission revocation/editing in this new dialog is not implemented.

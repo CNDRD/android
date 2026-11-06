@@ -143,6 +143,13 @@ public class FileOperationsHelper {
      * @param file File to share or unshare.
      */
     public void showShareFile(OCFile file) {
+        if (file.getSpaceId() != null) {
+            if (!"/".equals(file.getRemotePath()) && file.getRemoteId() == null) return;
+            eu.opencloud.android.presentation.sharing.SpaceSharingDialogFragment.show(
+                mFileActivity, mFileActivity.getAccount().name, file.getSpaceId(),
+                "/".equals(file.getRemotePath()) ? null : file.getRemoteId(), file.getFileName());
+            return;
+        }
         Intent intent = new Intent(mFileActivity, ShareActivity.class);
         intent.putExtra(FileActivity.EXTRA_FILE, file);
         intent.putExtra(FileActivity.EXTRA_ACCOUNT, mFileActivity.getAccount());

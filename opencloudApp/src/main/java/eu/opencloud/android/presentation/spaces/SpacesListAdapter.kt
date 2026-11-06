@@ -58,6 +58,8 @@ class SpacesListAdapter(
             spacesListItemCard.setOnClickListener {
                 listener.onItemClick(space)
             }
+            spacesListItemShare.visibility = if (space.isProject) android.view.View.VISIBLE else android.view.View.GONE
+            spacesListItemShare.setOnClickListener { listener.onShareClick(space) }
             spacesListItemCard.setAccessibilityRole(className = Button::class.java)
 
             if (space.isPersonal && !isMultiPersonal) {
@@ -108,6 +110,7 @@ class SpacesListAdapter(
 
     interface SpacesListAdapterListener {
         fun onItemClick(ocSpace: OCSpace)
+        fun onShareClick(ocSpace: OCSpace)
     }
 
     class SpacesViewHolder(val binding: SpacesListItemBinding) : RecyclerView.ViewHolder(binding.root)
