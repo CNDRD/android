@@ -29,7 +29,9 @@ class SpaceSharingOperation(
             RemoteOperationResult<String>(RemoteOperationResult.ResultCode.OK).apply {
                 data = method.getResponseBodyAsString()
             }
-        } else RemoteOperationResult(method)
+        } else {
+            RemoteOperationResult(method)
+        }
     } catch (e: Exception) {
         RemoteOperationResult(e)
     }
