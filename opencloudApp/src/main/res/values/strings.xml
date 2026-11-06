@@ -876,4 +876,5 @@
     <string name="add_to_home_screen_shortcut_folder_missing">This folder is no longer available. It may have been removed or renamed.</string>
     <string name="add_to_home_screen_dialog_error_length_max">Shortcut name must not be longer than %d characters.</string>
 
+    <string name="gallery_video_retry">Unable to play this video. Tap to retry.</string>
 </resources>

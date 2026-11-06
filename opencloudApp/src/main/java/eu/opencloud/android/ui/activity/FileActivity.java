@@ -410,30 +410,9 @@ public class FileActivity extends DrawerActivity
 
     @Override
     public void navigateToOption(FileListOption fileListOption) {
-        Intent intent;
-        switch (fileListOption) {
-            case ALL_FILES:
-                restart();
-                break;
-            case SPACES_LIST:
-                intent = new Intent(this, FileDisplayActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intent.putExtra(EXTRA_FILE_LIST_OPTION, (Parcelable) FileListOption.SPACES_LIST);
-                startActivity(intent);
-                break;
-            case SHARED_BY_LINK:
-                intent = new Intent(this, FileDisplayActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intent.putExtra(EXTRA_FILE_LIST_OPTION, (Parcelable) FileListOption.SHARED_BY_LINK);
-                startActivity(intent);
-                break;
-            case AV_OFFLINE:
-                intent = new Intent(this, FileDisplayActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intent.putExtra(EXTRA_FILE_LIST_OPTION, (Parcelable) FileListOption.AV_OFFLINE);
-                startActivity(intent);
-                break;
-        }
+        Intent intent = new Intent(this, FileDisplayActivity.class);
+        intent.putExtra(EXTRA_FILE_LIST_OPTION, (Parcelable) fileListOption);
+        startBottomNavigationActivity(intent);
     }
 
     protected OCFile getCurrentDir() {

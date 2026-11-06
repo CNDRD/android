@@ -106,7 +106,7 @@ public class PrepareVideoPlayerAsyncTask extends AsyncTask<Object, Void, MediaSo
             // This represents the media to be played.
             mediaSource = buildMediaSource(mediaDataSourceFactory, uri);
 
-        } catch (AccountUtils.AccountNotFoundException e) {
+        } catch (AccountUtils.AccountNotFoundException | RuntimeException e) {
             Timber.e(e);
         }
 
@@ -170,11 +170,9 @@ public class PrepareVideoPlayerAsyncTask extends AsyncTask<Object, Void, MediaSo
     @Override
     protected void onPostExecute(MediaSource mediaSource) {
         super.onPostExecute(mediaSource);
-        if (mediaSource != null) {
-            OnPrepareVideoPlayerTaskListener listener = mListener.get();
-            if (listener != null) {
-                listener.OnPrepareVideoPlayerTaskCallback(mediaSource);
-            }
+        OnPrepareVideoPlayerTaskListener listener = mListener.get();
+        if (listener != null && !isCancelled()) {
+            listener.OnPrepareVideoPlayerTaskCallback(mediaSource);
         }
     }
 

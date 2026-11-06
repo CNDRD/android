@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="m3_show_grid">Show grid</string>
+    <string name="m3_show_list">Show list</string>
+    <string name="m3_sort_ascending">Ascending</string>
+    <string name="m3_sort_descending">Descending</string>
+    <string name="m3_upload_destination">Destination: %1$s</string>
+    <string name="m3_upload_files_description">Choose photos, videos or documents</string>
+    <string name="m3_upload_camera_description">Take a photo and upload it</string>
+</resources>

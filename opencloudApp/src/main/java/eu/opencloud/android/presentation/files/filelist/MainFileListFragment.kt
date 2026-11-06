@@ -54,6 +54,10 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import eu.opencloud.android.presentation.material3.OpenCloudMaterialTheme
+import eu.opencloud.android.presentation.material3.UploadSourceSheet
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import coil.load
@@ -165,6 +169,8 @@ class MainFileListFragment : Fragment(),
 
     private var _binding: MainFileListFragmentBinding? = null
     private val binding get() = _binding!!
+
+    private var uploadSheetView: ComposeView? = null
 
     private lateinit var layoutManager: StaggeredGridLayoutManager
     private lateinit var fileListAdapter: FileListAdapter
@@ -359,9 +365,13 @@ class MainFileListFragment : Fragment(),
             updateActionModeAfterTogglingSelected()
             true
         }
-        if (isPickingAFolder() || getCurrentSpace()?.isPersonal == false) {
+        if (isPickingAFolder()) {
             menu.findItem(R.id.action_share_current_folder)?.itemId?.let { menu.removeItem(it) }
         } else {
+            menu.findItem(R.id.action_share_current_folder)?.apply {
+                setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_NEVER)
+                if (getCurrentSpace()?.isProject == true) setTitle(R.string.space_share_title)
+            }
             menu.findItem(R.id.action_share_current_folder)?.setOnMenuItemClickListener {
                 fileActions?.onShareFileClicked(mainFileListViewModel.getFile())
                 true
@@ -377,7 +387,7 @@ class MainFileListFragment : Fragment(),
         if (mainFileListViewModel.isGridModeSetAsPreferred()) {
             layoutManager =
                 StaggeredGridLayoutManager(
-                    ColumnQuantity(requireContext(), R.layout.grid_item).calculateNoOfColumns(),
+                    preferredGridColumnCount(),
                     RecyclerView.VERTICAL
                 )
             viewType = ViewType.VIEW_TYPE_GRID
@@ -428,6 +438,19 @@ class MainFileListFragment : Fragment(),
 
         // Set SortOptions and its listeners
         binding.optionsLayout.onSortOptionsListener = this
+        binding.optionsLayout.onSortSelected = { type, order ->
+            binding.optionsLayout.sortTypeSelected = type
+            binding.optionsLayout.sortOrderSelected = order
+            mainFileListViewModel.updateSortTypeAndOrder(type, order)
+        }
+        if (!isPickingAFolder()) {
+            binding.optionsLayout.preferredGridColumns = mainFileListViewModel.getPreferredGridColumns()
+            binding.optionsLayout.onGridColumnsSelected = { columns ->
+                mainFileListViewModel.setPreferredGridColumns(columns)
+                binding.optionsLayout.preferredGridColumns = columns
+                onViewTypeListener(ViewType.VIEW_TYPE_GRID)
+            }
+        }
         setViewTypeSelector(SortOptionsView.AdditionalView.CREATE_FOLDER)
 
         showOrHideFab(requireArguments().getParcelable(ARG_FILE_LIST_OPTION)!!, requireArguments().getParcelable(ARG_INITIAL_FOLDER_TO_DISPLAY)!!)
@@ -964,6 +987,7 @@ class MainFileListFragment : Fragment(),
     }
 
     override fun onViewTypeListener(viewType: ViewType) {
+        this.viewType = viewType
         binding.optionsLayout.viewTypeSelected = viewType
 
         if (viewType == ViewType.VIEW_TYPE_LIST) {
@@ -972,11 +996,15 @@ class MainFileListFragment : Fragment(),
 
         } else {
             mainFileListViewModel.setGridModeAsPreferred()
-            layoutManager.spanCount = ColumnQuantity(requireContext(), R.layout.grid_item).calculateNoOfColumns()
+            layoutManager.spanCount = preferredGridColumnCount()
         }
 
         fileListAdapter.notifyItemRangeChanged(0, fileListAdapter.itemCount)
     }
+
+    private fun preferredGridColumnCount(): Int =
+        mainFileListViewModel.getPreferredGridColumns().takeIf { it != 0 }
+            ?: ColumnQuantity(requireContext(), R.layout.grid_item).calculateNoOfColumns()
 
     override fun onSortSelected(sortType: SortType) {
         binding.optionsLayout.sortTypeSelected = sortType
@@ -987,6 +1015,11 @@ class MainFileListFragment : Fragment(),
     private fun isPickingAFolder(): Boolean {
         val args = arguments
         return args != null && args.getBoolean(ARG_PICKING_A_FOLDER, false)
+    }
+
+    override fun onDestroyView() {
+        dismissUploadSheet()
+        super.onDestroyView()
     }
 
     override fun onDestroy() {
@@ -1149,27 +1182,41 @@ class MainFileListFragment : Fragment(),
     }
 
     private fun openBottomSheetToUploadFiles() {
-        val uploadBottomSheet = layoutInflater.inflate(R.layout.upload_bottom_sheet_fragment, null)
-        val dialog = BottomSheetDialog(requireContext())
-        dialog.setContentView(uploadBottomSheet)
-        val uploadFromFilesItemView: BottomSheetFragmentItemView = uploadBottomSheet.findViewById(R.id.upload_from_files_item_view)
-        val uploadFromCameraItemView: BottomSheetFragmentItemView = uploadBottomSheet.findViewById(R.id.upload_from_camera_item_view)
-        val uploadToTextView = uploadBottomSheet.findViewById<TextView>(R.id.upload_to_text_view)
-        uploadFromFilesItemView.setOnClickListener {
-            uploadActions?.uploadFromFileSystem()
-            dialog.hide()
+        if (uploadSheetView != null) return
+        val folder = mainFileListViewModel.getFile()
+        val destination = if (folder.remotePath == ROOT_PATH) {
+            getString(R.string.default_display_name_for_root_folder)
+        } else folder.fileName
+        val sheet = ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                OpenCloudMaterialTheme {
+                    UploadSourceSheet(
+                        destination = destination,
+                        onDismiss = { dismissUploadSheet() },
+                        onFiles = {
+                            dismissUploadSheet()
+                            uploadActions?.uploadFromFileSystem()
+                        },
+                        onCamera = {
+                            dismissUploadSheet()
+                            uploadActions?.uploadFromCamera()
+                        },
+                    )
+                }
+            }
         }
-        uploadFromCameraItemView.setOnClickListener {
-            uploadActions?.uploadFromCamera()
-            dialog.hide()
-        }
-        uploadToTextView.text = String.format(
-            resources.getString(R.string.upload_to),
-            resources.getString(R.string.app_name)
-        )
-        val uploadBottomSheetBehavior: BottomSheetBehavior<*> = BottomSheetBehavior.from(uploadBottomSheet.parent as View)
-        dialog.setOnShowListener { uploadBottomSheetBehavior.setPeekHeight(uploadBottomSheet.measuredHeight) }
-        dialog.show()
+        uploadSheetView = sheet
+        binding.root.addView(sheet, ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
+        ))
+    }
+
+    private fun dismissUploadSheet() {
+        val sheet = uploadSheetView ?: return
+        uploadSheetView = null
+        sheet.disposeComposition()
+        (sheet.parent as? ViewGroup)?.removeView(sheet)
     }
 
     private fun openBottomSheetToCreateNewFile(listAppRegistry: List<AppRegistryMimeType>) {

@@ -49,6 +49,7 @@ import eu.opencloud.android.usecases.transfers.uploads.UploadFilesFromSystemUseC
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -75,8 +76,16 @@ class TransfersViewModel(
     val workInfosListLiveData: LiveData<List<WorkInfo>>
         get() = _workInfosListLiveData
 
+    // null distinguishes loading from an actual empty transfer history.
+    val transfersStateFlow: StateFlow<List<OCTransfer>?> = getAllTransfersAsStreamUseCase(Unit).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = null,
+    )
+    val uploadFeedbackTracker = UploadFeedbackTracker()
+
     val transfersWithSpaceStateFlow: StateFlow<List<Pair<OCTransfer, OCSpace?>>> = combine(
-        getAllTransfersAsStreamUseCase(Unit),
+        transfersStateFlow.filterNotNull(),
         getSpacesFromEveryAccountUseCaseAsStream(Unit)
     ) { transfers: List<OCTransfer>, spaces: List<OCSpace> ->
         transfers.map { transfer ->

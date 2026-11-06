@@ -30,6 +30,7 @@ package eu.opencloud.android.ui.activity
 import android.accounts.Account
 import android.accounts.AccountManager
 import android.accounts.AccountManagerFuture
+import android.app.ActivityOptions
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.content.res.Configuration
@@ -249,15 +250,21 @@ abstract class DrawerActivity : ToolbarActivity() {
         when (menuItemId) {
             R.id.nav_all_files -> navigateToOption(FileListOption.ALL_FILES)
             R.id.nav_spaces -> navigateToOption(FileListOption.SPACES_LIST)
-            R.id.nav_uploads -> if (!isCurrentOptionActive) {
-                val uploadListIntent = Intent(applicationContext, UploadListActivity::class.java)
-                uploadListIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                startActivity(uploadListIntent)
-            }
+            R.id.nav_uploads -> if (!isCurrentOptionActive) openUploads()
 
             R.id.nav_available_offline_files -> navigateToOption(FileListOption.AV_OFFLINE)
             R.id.nav_shared_by_link_files -> navigateToOption(FileListOption.SHARED_BY_LINK)
         }
+    }
+
+    protected open fun openUploads() {
+        startBottomNavigationActivity(Intent(this, UploadListActivity::class.java))
+    }
+
+    /** Top-level tabs share a window position; they must not animate like drill-down screens. */
+    protected fun startBottomNavigationActivity(intent: Intent) {
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NO_ANIMATION)
+        startActivity(intent, ActivityOptions.makeCustomAnimation(this, 0, 0).toBundle())
     }
 
     private fun openHelp() {

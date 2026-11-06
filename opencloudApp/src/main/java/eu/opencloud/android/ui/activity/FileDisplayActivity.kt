@@ -31,6 +31,7 @@ package eu.opencloud.android.ui.activity
 
 import android.Manifest.permission.POST_NOTIFICATIONS
 import android.accounts.Account
+import android.accounts.AccountManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -50,6 +51,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -59,6 +61,7 @@ import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.work.WorkManager
+import com.google.android.material.snackbar.Snackbar
 import eu.opencloud.android.AppRater
 import eu.opencloud.android.BuildConfig
 import eu.opencloud.android.MainApp
@@ -73,6 +76,7 @@ import eu.opencloud.android.domain.exceptions.SSLRecoverablePeerUnverifiedExcept
 import eu.opencloud.android.domain.exceptions.UnauthorizedException
 import eu.opencloud.android.domain.files.model.FileListOption
 import eu.opencloud.android.domain.files.model.OCFile
+import eu.opencloud.android.domain.transfers.model.OCTransfer
 import eu.opencloud.android.domain.files.model.OCFile.Companion.ROOT_PARENT_ID
 import eu.opencloud.android.domain.spaces.model.OCSpace
 import eu.opencloud.android.domain.utils.Event
@@ -91,9 +95,11 @@ import eu.opencloud.android.extensions.showMessageInSnackbar
 import eu.opencloud.android.lib.common.accounts.AccountUtils
 import eu.opencloud.android.lib.common.authentication.OpenCloudBearerCredentials
 import eu.opencloud.android.lib.common.network.CertificateCombinedException
+import eu.opencloud.android.lib.common.operations.RemoteOperation
 import eu.opencloud.android.lib.common.operations.RemoteOperationResult
 import eu.opencloud.android.lib.common.operations.RemoteOperationResult.ResultCode
 import eu.opencloud.android.lib.resources.status.OpenCloudVersion
+import eu.opencloud.android.operations.CheckCurrentCredentialsOperation
 import eu.opencloud.android.operations.SyncProfileOperation
 import eu.opencloud.android.presentation.accounts.ManageAccountsViewModel
 import eu.opencloud.android.presentation.authentication.AccountUtils.getCurrentOpenCloudAccount
@@ -182,6 +188,9 @@ class FileDisplayActivity : FileActivity(),
     private var syncInProgress = false
 
     var fileListOption = FileListOption.ALL_FILES
+    private var pendingBottomNavigationOption: FileListOption? = null
+    private var uploadsTabVisible = false
+    private lateinit var uploadsTab: EmbeddedUploadsTab
     private var waitingToSend: OCFile? = null
     private var waitingToOpen: OCFile? = null
 
@@ -207,6 +216,7 @@ class FileDisplayActivity : FileActivity(),
         Timber.v("onCreate() start")
 
         super.onCreate(savedInstanceState) // this calls onAccountChanged() when openCloud Account is valid
+        registerBackNavigation()
 
         checkPasscodeEnforced(this)
 
@@ -271,6 +281,8 @@ class FileDisplayActivity : FileActivity(),
 
         leftFragmentContainer = findViewById(R.id.left_fragment_container)
         rightFragmentContainer = findViewById(R.id.right_fragment_container)
+        uploadsTab = EmbeddedUploadsTab(this)
+        uploadsTabVisible = savedInstanceState?.getBoolean(KEY_UPLOADS_TAB_VISIBLE) == true
 
         // Init Fragment without UI to retain AsyncTask across configuration changes
         val fm = supportFragmentManager
@@ -293,6 +305,7 @@ class FileDisplayActivity : FileActivity(),
         }
 
 
+        observeUploadFeedback()
         checkNotificationPermission()
 
         // edge-to-edge
@@ -316,6 +329,7 @@ class FileDisplayActivity : FileActivity(),
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        pendingBottomNavigationOption = intent.getParcelableExtra(EXTRA_FILE_LIST_OPTION) as? FileListOption
         handleShortcutIntent()
     }
 
@@ -323,6 +337,14 @@ class FileDisplayActivity : FileActivity(),
         super.onResumeFragments()
         // New intents can arrive while fragment state is saved. Navigate after it is safe to commit.
         navigateToShortcutFolder()
+        pendingBottomNavigationOption?.let { option ->
+            pendingBottomNavigationOption = null
+            // Returning to the same tab preserves its current folder and scroll position.
+            if (option != fileListOption) navigateTo(option)
+            setCheckedItemAtBottomBar(getMenuItemForFileListOption(fileListOption))
+        }
+        if (uploadsTabVisible) showUploadsTab()
+        transfersViewModel.transfersStateFlow.value?.let { renderUploadFeedback(it) }
     }
 
     private fun checkNotificationPermission() {
@@ -571,10 +593,10 @@ class FileDisplayActivity : FileActivity(),
      * @param existsSecondFragment - true if showing details or preview of a file
      */
     private fun updateFragmentsVisibility(existsSecondFragment: Boolean) {
-        leftFragmentContainer?.isVisible = !existsSecondFragment
-        rightFragmentContainer?.isVisible = existsSecondFragment
+        leftFragmentContainer?.isVisible = !uploadsTabVisible && !existsSecondFragment
+        rightFragmentContainer?.isVisible = !uploadsTabVisible && existsSecondFragment
 
-        showBottomNavBar(show = !existsSecondFragment)
+        showBottomNavBar(show = uploadsTabVisible || !existsSecondFragment)
     }
 
     private fun cleanSecondFragment() {
@@ -600,6 +622,7 @@ class FileDisplayActivity : FileActivity(),
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        if (uploadsTabVisible) return false
         super.onCreateOptionsMenu(menu)
         // Allow or disallow touches with other visible windows
         val actionBarView = findViewById<View>(R.id.action_bar)
@@ -644,6 +667,13 @@ class FileDisplayActivity : FileActivity(),
 
         bayPassUnlockOnce()
 
+        // Upload retries now share the browser's activity, including credential renewal.
+        if (requestCode == REQUEST_CODE__UPDATE_CREDENTIALS && resultCode == RESULT_OK) {
+            data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)?.let { accountName ->
+                transfersViewModel.retryUploadsForAccount(accountName)
+            }
+        }
+
         // Handle calls form internal activities.
         if (requestCode == REQUEST_CODE__SELECT_CONTENT_FROM_APPS && (resultCode == RESULT_OK || resultCode == RESULT_OK_AND_MOVE)) {
 
@@ -683,6 +713,90 @@ class FileDisplayActivity : FileActivity(),
         }
     }
 
+    private fun observeUploadFeedback() {
+        val feedbackView = binding.navCoordinatorLayout.uploadFeedback
+        feedbackView.setOnClickListener { openUploads() }
+        collectLatestLifecycleFlow(transfersViewModel.transfersStateFlow) { transfers ->
+            if (transfers == null) return@collectLatestLifecycleFlow
+            renderUploadFeedback(transfers)
+        }
+    }
+
+    private fun renderUploadFeedback(transfers: List<OCTransfer>) {
+        val feedbackView = binding.navCoordinatorLayout.uploadFeedback
+        val currentAccount = getCurrentOpenCloudAccount(this)
+        if (currentAccount == null) {
+            feedbackView.isVisible = false
+            return
+        }
+        val feedback = transfersViewModel.uploadFeedbackTracker.update(currentAccount.name, transfers)
+        feedbackView.isVisible = feedback.uploading + feedback.queued > 0
+        feedbackView.text = getString(R.string.upload_feedback_active, feedback.uploading, feedback.queued)
+        if (feedback.succeeded + feedback.failed > 0) {
+            showUploadMessage(
+                getString(R.string.upload_feedback_finished, feedback.succeeded, feedback.failed),
+                Snackbar.LENGTH_LONG,
+            )
+        }
+    }
+
+    override fun openUploads() {
+        if (supportFragmentManager.isStateSaved || account == null) return
+        uploadsTabVisible = true
+        mainFileListFragment?.collapseFab()
+        showUploadsTab()
+    }
+
+    private fun showUploadsTab() {
+        uploadsTab.show()
+        updateFragmentsVisibility(secondFragment != null)
+        setupRootToolbar(title = getString(R.string.uploads_view_title), isSearchEnabled = false, isAvatarRequested = true)
+        setCheckedItemAtBottomBar(R.id.nav_uploads)
+        invalidateOptionsMenu()
+    }
+
+    private fun hideUploadsTab() {
+        uploadsTabVisible = false
+        uploadsTab.hide()
+        updateFragmentsVisibility(secondFragment != null)
+        updateToolbar(file, mainFileListFragment?.getCurrentSpace())
+        invalidateOptionsMenu()
+    }
+
+    override fun onRemoteOperationFinish(operation: RemoteOperation<*>?, result: RemoteOperationResult<*>?) {
+        if (operation is CheckCurrentCredentialsOperation && result != null) {
+            fileOperationsHelper.setOpIdWaitingFor(Long.MAX_VALUE)
+            dismissLoadingDialog()
+            if (result.isSuccess) {
+                (result.data as? Account)?.let { transfersViewModel.retryUploadsForAccount(it.name) }
+            } else {
+                requestCredentialsUpdate()
+            }
+        } else {
+            super.onRemoteOperationFinish(operation, result)
+        }
+    }
+
+    private fun uploadMessageAnchor(): View = with(binding.navCoordinatorLayout) {
+        if (bottomNavView.isVisible) bottomNavView else bottomNavViewSpacer
+    }
+
+    private fun showPreparingUploads() {
+        showUploadMessage(getString(R.string.upload_feedback_preparing), Snackbar.LENGTH_SHORT)
+    }
+
+    private fun showUploadMessage(message: CharSequence, duration: Int) {
+        Snackbar.make(binding.root, message, duration)
+            .setAnchorView(uploadMessageAnchor())
+            .apply {
+                // Keep upload messages flat so their shadow never covers the navigation bar.
+                view.stateListAnimator = null
+                view.elevation = 0f
+                view.translationZ = 0f
+            }
+            .setAction(R.string.upload_feedback_view) { openUploads() }.show()
+    }
+
     private fun requestUploadOfFilesFromFileSystem(filePaths: Array<String>?) {
         if (filePaths != null) {
             val remotePaths = arrayOfNulls<String>(filePaths.size)
@@ -691,6 +805,7 @@ class FileDisplayActivity : FileActivity(),
                 remotePaths[j] = remotePathBase + File(filePaths[j]).name
             }
 
+            showPreparingUploads()
             transfersViewModel.uploadFilesFromSystem(
                 accountName = account.name,
                 listOfLocalPaths = filePaths.toList(),
@@ -727,6 +842,7 @@ class FileDisplayActivity : FileActivity(),
             }
         }
 
+        showPreparingUploads()
         transfersViewModel.uploadFilesFromContentUri(
             accountName = account.name,
             listOfContentUris = streamsToUpload,
@@ -767,7 +883,21 @@ class FileDisplayActivity : FileActivity(),
         fileOperationsViewModel.performOperation(copyOperation)
     }
 
+    internal fun registerBackNavigation() {
+        // Predictive back gestures use the dispatcher rather than the legacy Activity hook.
+        onBackPressedDispatcher.addCallback(this) { handleBackNavigation() }
+    }
+
     override fun onBackPressed() {
+        onBackPressedDispatcher.onBackPressed()
+    }
+
+    private fun handleBackNavigation() {
+        if (uploadsTabVisible && !isDrawerOpen()) {
+            hideUploadsTab()
+            setCheckedItemAtBottomBar(getMenuItemForFileListOption(fileListOption))
+            return
+        }
         val isFabOpen = mainFileListFragment?.isFabExpanded() ?: false
 
         /*
@@ -778,10 +908,10 @@ class FileDisplayActivity : FileActivity(),
          */
         if (isDrawerOpen() && isFabOpen) {
             // close drawer first
-            super.onBackPressed()
+            closeDrawer()
         } else if (isDrawerOpen() && !isFabOpen) {
             // close drawer
-            super.onBackPressed()
+            closeDrawer()
         } else if (!isDrawerOpen() && isFabOpen) {
             // close fab
             mainFileListFragment?.collapseFab()
@@ -832,6 +962,7 @@ class FileDisplayActivity : FileActivity(),
         outState.putParcelable(KEY_WAITING_TO_PREVIEW, fileWaitingToPreview)
         outState.putBoolean(KEY_SYNC_IN_PROGRESS, syncInProgress)
         outState.putParcelable(KEY_FILE_LIST_OPTION, fileListOption)
+        outState.putBoolean(KEY_UPLOADS_TAB_VISIBLE, uploadsTabVisible)
         //outState.putBoolean(KEY_REFRESH_SHARES_IN_PROGRESS,
         // mRefreshSharesInProgress);
         outState.putParcelable(KEY_WAITING_TO_SEND, waitingToSend)
@@ -844,14 +975,16 @@ class FileDisplayActivity : FileActivity(),
         Timber.v("onResume() start")
         super.onResume()
 
-        if (mainFileListFragment?.getCurrentSpace()?.isProject == true) {
+        if (uploadsTabVisible) {
+            setCheckedItemAtBottomBar(R.id.nav_uploads)
+        } else if (mainFileListFragment?.getCurrentSpace()?.isProject == true) {
             setCheckedItemAtBottomBar(getMenuItemForFileListOption(FileListOption.SPACES_LIST))
             updateToolbar(null, mainFileListFragment?.getCurrentSpace())
         } else {
             setCheckedItemAtBottomBar(getMenuItemForFileListOption(fileListOption))
         }
 
-        if (secondFragment == null) {
+        if (!uploadsTabVisible && secondFragment == null) {
             mainFileListFragment?.updateFileListOption(fileListOption, file)
 
             // refresh list of files
@@ -1000,6 +1133,7 @@ class FileDisplayActivity : FileActivity(),
     }
 
     private fun updateToolbar(chosenFileFromParam: OCFile?, space: OCSpace? = null) {
+        if (uploadsTabVisible) return
         val chosenFile = chosenFileFromParam ?: file // If no file is passed, current file decides
 
         // If we come from a preview activity (image or video), not updating toolbar when initializing this activity
@@ -1717,10 +1851,10 @@ class FileDisplayActivity : FileActivity(),
      * in milliseconds.
      */
     fun startVideoPreview(file: OCFile, startPlaybackPosition: Int) {
-        val videoActivityIntent = Intent(this, PreviewVideoActivity::class.java)
-        videoActivityIntent.putExtra(PreviewVideoActivity.EXTRA_FILE, file)
-        videoActivityIntent.putExtra(PreviewVideoActivity.EXTRA_ACCOUNT, account)
-        videoActivityIntent.putExtra(PreviewVideoActivity.EXTRA_PLAY_POSITION, startPlaybackPosition)
+        val videoActivityIntent = Intent(this, PreviewImageActivity::class.java)
+        videoActivityIntent.putExtra(EXTRA_FILE, file)
+        videoActivityIntent.putExtra(EXTRA_ACCOUNT, account)
+        videoActivityIntent.putExtra(PreviewVideoActivity.EXTRA_PLAY_POSITION, startPlaybackPosition.toLong())
         startActivity(videoActivityIntent)
     }
 
@@ -1857,7 +1991,10 @@ class FileDisplayActivity : FileActivity(),
     }
 
     override fun navigateToOption(fileListOption: FileListOption) {
-        navigateTo(fileListOption)
+        val returningToBrowser = uploadsTabVisible
+        if (returningToBrowser) hideUploadsTab()
+        // Reveal the existing folder and scroll position when returning to the same browser tab.
+        if (!returningToBrowser || fileListOption != this.fileListOption) navigateTo(fileListOption)
     }
 
     private fun getMenuItemForFileListOption(fileListOption: FileListOption?): Int = when (fileListOption) {
@@ -2042,6 +2179,7 @@ class FileDisplayActivity : FileActivity(),
 
     private fun navigateToShortcutFolder() {
         val folder = shortcutFolderToNavigate ?: return
+        if (uploadsTabVisible) hideUploadsTab()
         shortcutFolderToNavigate = null
         fileListOption = FileListOption.ALL_FILES
         setFile(folder)
@@ -2146,6 +2284,7 @@ class FileDisplayActivity : FileActivity(),
         private const val KEY_WAITING_TO_SEND = "WAITING_TO_SEND"
         private const val KEY_UPLOAD_HELPER = "FILE_UPLOAD_HELPER"
         private const val KEY_FILE_LIST_OPTION = "FILE_LIST_OPTION"
+        private const val KEY_UPLOADS_TAB_VISIBLE = "UPLOADS_TAB_VISIBLE"
         const val MIMETYPE_TEXT_URI_LIST = "text/uri-list"
         const val KEY_DEEP_LINK_ACCOUNTS_CHECKED = "DEEP_LINK_ACCOUNTS_CHECKED"
 
