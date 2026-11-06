@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import timber.log.Timber
 import org.koin.android.ext.android.inject
 
 /** Same-server users only. Deliberately has no link creation or federation controls. */
@@ -157,6 +158,7 @@ class SpaceSharingDialogFragment : DialogFragment() {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                Timber.e(e, "Internal Space sharing request failed")
                 status.setText(R.string.space_share_error)
             } finally {
                 setBusy(false)
