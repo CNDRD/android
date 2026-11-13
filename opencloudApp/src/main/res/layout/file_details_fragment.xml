@@ -21,28 +21,26 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardView"
+                style="@style/Widget.Material3.CardView.Filled"
                 app:cardElevation="0dp"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_margin="5dp"
-                android:elevation="10dp"
-                app:cardBackgroundColor="?attr/colorSurface"
-                app:cardCornerRadius="8dp">
+                app:cardBackgroundColor="?attr/colorSurfaceContainer">
 
                 <ImageView
                     android:id="@+id/fdImageDetailFile"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="?attr/colorSurface"
                     android:contentDescription="@string/filedetails_file_image_content_description"
                     android:scaleType="centerInside"
                     android:src="@drawable/file"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <ImageView
                 android:id="@+id/badgeDetailFile"

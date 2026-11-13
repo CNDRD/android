@@ -21,7 +21,7 @@
 
     <TextView
         android:id="@+id/list_empty_dataset_title"
-        style="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:textAppearance="?attr/textAppearanceTitleMedium"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/standard_margin"
@@ -38,7 +38,7 @@
 
     <TextView
         android:id="@+id/list_empty_dataset_sub_title"
-        style="@style/TextAppearance.MaterialComponents.Body1"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/standard_margin"

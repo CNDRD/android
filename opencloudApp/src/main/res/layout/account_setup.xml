@@ -107,14 +107,14 @@
                         app:drawableTint="@color/login_connection_text_color"
                         tools:text="@string/auth_testing_connection" />
 
-                    <androidx.appcompat.widget.AppCompatButton
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/webfinger_button"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_horizontal"
                         android:contentDescription="@string/global_proceed"
                         android:text="@string/global_proceed"
-                        android:theme="@style/Button.Authenticator" />
+                        style="@style/Widget.Material3.Button" />
 
                 </LinearLayout>
 
@@ -124,7 +124,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <androidx.appcompat.widget.AppCompatButton
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/centeredRefreshButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -132,7 +132,7 @@
                         android:layout_marginBottom="10dp"
                         android:contentDescription="@string/auth_check_server"
                         android:text="@string/auth_check_server"
-                        android:theme="@style/Button.Authenticator"
+                        style="@style/Widget.Material3.Button"
                         android:visibility="gone" />
 
                     <TextView
@@ -289,14 +289,14 @@
                         app:drawableTint="@color/login_credentials_text_color"
                         tools:text="@string/auth_unauthorized" />
 
-                    <androidx.appcompat.widget.AppCompatButton
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/loginButton"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_horizontal"
                         android:contentDescription="@string/setup_btn_login"
                         android:text="@string/setup_btn_login"
-                        android:theme="@style/Button.Authenticator"
+                        style="@style/Widget.Material3.Button"
                         android:visibility="gone"
                         tools:visibility="visible" />
                 </LinearLayout>

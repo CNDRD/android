@@ -39,7 +39,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/standard_padding"
         android:text="@string/release_notes_header"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+        android:textAppearance="?attr/textAppearanceHeadlineSmall"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -286,12 +286,6 @@
         <item name="actionModeBackground">@color/action_mode_background</item>
     </style>
 
-    <style name="Button.Authenticator" parent="Widget.AppCompat.Button.Colored">
-        <item name="colorButtonNormal">@color/login_button_background_color</item>
-        <item name="colorAccent">@color/login_button_background_color</item>
-        <item name="android:textColor">@color/login_button_text_color</item>
-    </style>
-
     <style name="EditText.Authenticator" parent="Widget.AppCompat.EditText">
         <item name="android:textColor">@color/login_text_color</item>
         <item name="android:textColorHint">@color/login_text_hint_color</item>
