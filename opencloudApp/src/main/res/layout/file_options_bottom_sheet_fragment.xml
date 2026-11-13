@@ -5,12 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/colorSurface"
-    android:padding="@dimen/standard_padding">
+    android:padding="20dp">
 
     <ImageView
         android:id="@+id/thumbnail_bottom_sheet"
         android:layout_width="@dimen/file_icon_size_bottom_sheet"
         android:layout_height="@dimen/file_icon_size_bottom_sheet"
+        android:contentDescription="@null"
         android:src="@drawable/ic_menu_archive"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -22,6 +23,7 @@
         android:layout_marginHorizontal="@dimen/standard_half_margin"
         android:ellipsize="end"
         android:maxLines="3"
+        android:textStyle="bold"
         android:textColor="?attr/colorOnSurface"
         android:textSize="@dimen/two_line_primary_text_size"
         app:layout_constraintEnd_toStartOf="@id/close_bottom_sheet"
@@ -67,7 +69,7 @@
         android:layout_width="@dimen/icon_button_size"
         android:layout_height="@dimen/icon_button_size"
         android:layout_gravity="center_vertical"
-        android:background="?android:attr/selectableItemBackground"
+        android:background="?attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true"
         android:scaleType="center"
