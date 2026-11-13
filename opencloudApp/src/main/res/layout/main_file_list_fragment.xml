@@ -207,6 +207,30 @@
                         android:text="@string/actionbar_select_inverse" />
 
                     <com.google.android.material.button.MaterialButton
+                        android:id="@+id/selection_share"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/action_share" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/selection_download"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/filedetails_download" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/selection_offline"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/set_available_offline" />
+
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/selection_move"
                         style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="wrap_content"
