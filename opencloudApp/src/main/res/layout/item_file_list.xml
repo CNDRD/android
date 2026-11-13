@@ -6,6 +6,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/colorSurface"
+    android:paddingStart="12dp"
+    android:paddingEnd="8dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp"
     android:minHeight="@dimen/item_file_list_min_height">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -24,6 +28,7 @@
             android:layout_width="@dimen/file_icon_size"
             android:layout_height="@dimen/file_icon_size"
             android:scaleType="centerCrop"
+            android:contentDescription="@null"
             android:src="@drawable/ic_menu_archive"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -57,7 +62,7 @@
             android:id="@+id/Filename"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:ellipsize="middle"
+            android:ellipsize="end"
             android:singleLine="true"
             android:textColor="?attr/colorOnSurface"
             android:textSize="@dimen/two_line_primary_text_size"
