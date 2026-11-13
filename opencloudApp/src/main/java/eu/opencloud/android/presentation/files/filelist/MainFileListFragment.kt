@@ -251,7 +251,7 @@ class MainFileListFragment : Fragment(),
                 )
             }
 
-            val displaySelectAll = checkedCount != fileListAdapter.itemCount - 1 // -1 because one of them is the footer :S
+            val displaySelectAll = checkedCount != fileListAdapter.selectableFileCount()
             mainFileListViewModel.filterMenuOptions(
                 checkedFiles, checkedFilesSync,
                 displaySelectAll, isMultiselection = true
@@ -1404,7 +1404,7 @@ class MainFileListFragment : Fragment(),
     @SuppressLint("UseRequireInsteadOfGet")
     private fun onFileActionChosen(menuId: Int?): Boolean {
         var handled: Boolean
-        val checkedFilesWithSyncInfo = fileListAdapter.getCheckedItems() as ArrayList<OCFileWithSyncInfo>
+        val checkedFilesWithSyncInfo = fileListAdapter.getCheckedItems()
 
         if (checkedFilesWithSyncInfo.isEmpty()) {
             return false
@@ -1415,7 +1415,7 @@ class MainFileListFragment : Fragment(),
         }
 
         /// Actions possible on a batch of files
-        val checkedFiles = checkedFilesWithSyncInfo.map { it.file } as ArrayList<OCFile>
+        val checkedFiles = ArrayList(checkedFilesWithSyncInfo.map { it.file })
         handled = onCheckedFilesActionChosen(menuId, checkedFiles)
         return handled
     }
