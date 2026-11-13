@@ -221,6 +221,15 @@ class MainFileListFragment : Fragment(),
         binding.selectionDelete.setOnClickListener {
             onFileActionChosen(R.id.action_remove_file)
         }
+        binding.selectionShare.setOnClickListener {
+            onFileActionChosen(R.id.action_share_file)
+        }
+        binding.selectionDownload.setOnClickListener {
+            onFileActionChosen(R.id.action_download_file)
+        }
+        binding.selectionOffline.setOnClickListener {
+            onFileActionChosen(R.id.action_set_available_offline)
+        }
     }
 
     private fun updateSelectionActionCard() {
@@ -249,6 +258,9 @@ class MainFileListFragment : Fragment(),
         binding.selectionMove.isVisible = menu?.findItem(R.id.action_move)?.isVisible == true
         binding.selectionCopy.isVisible = menu?.findItem(R.id.action_copy)?.isVisible == true
         binding.selectionDelete.isVisible = menu?.findItem(R.id.action_remove_file)?.isVisible == true
+        binding.selectionShare.isVisible = menu?.findItem(R.id.action_share_file)?.isVisible == true
+        binding.selectionDownload.isVisible = menu?.findItem(R.id.action_download_file)?.isVisible == true
+        binding.selectionOffline.isVisible = menu?.findItem(R.id.action_set_available_offline)?.isVisible == true
     }
 
     private val actionModeCallback: ActionMode.Callback = object : ActionMode.Callback {
@@ -296,9 +308,10 @@ class MainFileListFragment : Fragment(),
 
             checkedFiles = checkedFilesWithSyncInfo.map { it.file }
 
-            val checkedFilesSync = checkedFilesWithSyncInfo.map {
+            val checkedFilesSync = checkedFilesWithSyncInfo.mapNotNull {
+                val fileId = it.file.id ?: return@mapNotNull null
                 OCFileSyncInfo(
-                    fileId = it.file.id!!,
+                    fileId = fileId,
                     uploadWorkerUuid = it.uploadWorkerUuid,
                     downloadWorkerUuid = it.downloadWorkerUuid,
                     isSynchronizing = it.isSynchronizing
