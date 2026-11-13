@@ -56,6 +56,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import eu.opencloud.android.presentation.material3.OpenCloudMaterialTheme
 import eu.opencloud.android.presentation.material3.UploadSourceSheet
 import androidx.recyclerview.widget.RecyclerView
@@ -1340,7 +1341,7 @@ class MainFileListFragment : Fragment(),
         val inputLayout: TextInputLayout = dialogView.findViewById(R.id.inputTextLayout)
         input.requestFocus()
 
-        val builder = AlertDialog.Builder(requireContext()).apply {
+        val builder = MaterialAlertDialogBuilder(requireContext()).apply {
             setView(dialogView)
             setTitle(R.string.uploader_upload_text_dialog_title)
             setCancelable(false)

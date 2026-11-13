@@ -84,15 +84,11 @@
                     android:layout_marginTop="@dimen/standard_quarter_margin"
                     android:text="@string/fab_refresh_text"
                     android:textAllCaps="false"
-                    android:textColor="?attr/colorOnPrimary"
-                    android:theme="@style/Theme.MaterialComponents.Bridge"
                     android:visibility="gone"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:icon="@drawable/ic_action_refresh"
-                    app:iconTint="?attr/colorOnPrimary"
-                    app:backgroundTint="@color/primary_button_background_color"/>
+                    app:icon="@drawable/ic_action_refresh" />
 
                 <include
                     android:id="@+id/space_header"

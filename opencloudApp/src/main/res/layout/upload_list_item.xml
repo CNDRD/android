@@ -43,7 +43,7 @@
             android:singleLine="true"
             android:textColor="?attr/colorOnSurface"
             tools:text="@string/placeholder_filename"
-            android:textSize="16sp" />
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -58,7 +58,7 @@
                 android:ellipsize="middle"
                 android:singleLine="true"
                 tools:text="@string/placeholder_filesize"
-                android:textSize="12sp" />
+                android:textAppearance="?attr/textAppearanceBodySmall" />
 
             <TextView
                 android:id="@+id/upload_date"
@@ -66,7 +66,7 @@
                 android:layout_height="wrap_content"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="@string/placeholder_timestamp"
-                android:textSize="12sp" />
+                android:textAppearance="?attr/textAppearanceBodySmall" />
 
             <TextView
                 android:id="@+id/upload_status"
@@ -74,13 +74,12 @@
                 android:layout_height="wrap_content"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="@string/uploads_view_upload_status_succeeded"
-                android:textSize="12sp" />
+                android:textAppearance="?attr/textAppearanceBodySmall" />
 
         </LinearLayout>
 
-        <ProgressBar
+        <com.google.android.material.progressindicator.LinearProgressIndicator
             android:id="@+id/upload_progress_bar"
-            style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone" />
@@ -92,7 +91,7 @@
             android:textColor="?attr/colorOnSurfaceVariant"
             android:singleLine="true"
             tools:text="@string/auth_username"
-            android:textSize="12sp" />
+            android:textAppearance="?attr/textAppearanceBodySmall" />
 
         <include
             android:id="@+id/space_path_line"
@@ -108,15 +107,14 @@
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:layout_gravity="center_vertical"
-        android:paddingHorizontal="8dp"
         >
 
         <ImageButton
             android:id="@+id/upload_right_button"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_gravity="center"
-            android:background="@android:color/transparent"
+            android:background="?attr/selectableItemBackgroundBorderless"
             />
 
     </FrameLayout>

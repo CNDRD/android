@@ -8,6 +8,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import eu.opencloud.android.R
 import eu.opencloud.android.domain.files.model.OCFile
@@ -43,7 +44,7 @@ class AddToHomeScreenDialogFragment : DialogFragment() {
         inputText.selectAll()
         inputText.requestFocus()
 
-        val builder = AlertDialog.Builder(requireActivity())
+        val builder = MaterialAlertDialogBuilder(requireActivity())
         builder.setView(view)
             .setPositiveButton(R.string.add_to_home_screen_dialog_add_button) { dialog, _ ->
                 val name = inputText.text.toString().trim()
