@@ -4,8 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?android:attr/selectableItemBackground"
-    android:padding="@dimen/standard_half_padding">
+    android:background="?attr/selectableItemBackground"
+    android:minHeight="56dp"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="12dp">
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/item_icon"
@@ -21,9 +23,9 @@
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/item_title"
         style="@style/Theme.openCloud.SortBottomSheetFragment.Item"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/standard_margin"
+        android:layout_marginStart="16dp"
         android:layout_marginEnd="@dimen/standard_margin"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/item_additional_icon"
