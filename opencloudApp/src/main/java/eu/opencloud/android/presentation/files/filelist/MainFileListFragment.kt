@@ -199,6 +199,43 @@ class MainFileListFragment : Fragment(),
     private var succeededTransfers: List<OCTransfer>? = null
     private var numberOfUploadsRefreshed: Int = 0
 
+
+    /**
+     * Secondary Material 3 action surface. The existing ActionMode remains
+     * responsible for overflow operations and permission filtering.
+     */
+    private fun setupSelectionActions() {
+        binding.selectionSelectAll.setOnClickListener {
+            onFileActionChosen(R.id.file_action_select_all)
+        }
+        binding.selectionMove.setOnClickListener {
+            onFileActionChosen(R.id.action_move)
+        }
+        binding.selectionCopy.setOnClickListener {
+            onFileActionChosen(R.id.action_copy)
+        }
+        binding.selectionDelete.setOnClickListener {
+            onFileActionChosen(R.id.action_remove_file)
+        }
+    }
+
+    private fun updateSelectionActionCard() {
+        val count = fileListAdapter.selectedItemCount
+        binding.selectionActionCard.isVisible = count > 0 && actionMode != null
+        if (count == 0) return
+
+        binding.selectionCountLabel.text = resources.getQuantityString(
+            R.plurals.items_selected_count, count, count
+        )
+        binding.selectionSelectAll.isVisible = count < fileListAdapter.selectableFileCount()
+
+        // Mirror the already-filtered ActionMode menu: never offer an action
+        // that is unavailable for the current selection or account permissions.
+        binding.selectionMove.isVisible = menu?.findItem(R.id.action_move)?.isVisible == true
+        binding.selectionCopy.isVisible = menu?.findItem(R.id.action_copy)?.isVisible == true
+        binding.selectionDelete.isVisible = menu?.findItem(R.id.action_remove_file)?.isVisible == true
+    }
+
     private val actionModeCallback: ActionMode.Callback = object : ActionMode.Callback {
 
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
@@ -216,6 +253,8 @@ class MainFileListFragment : Fragment(),
             // Set gray color
             val window = activity?.window
             statusBarColor = window?.statusBarColor ?: -1
+
+            updateSelectionActionCard()
 
             // Hide FAB in multi selection mode
             toggleFabVisibility(false)
@@ -268,6 +307,7 @@ class MainFileListFragment : Fragment(),
                 }
             }
             setRolesAccessibilityToMenuItems()
+            updateSelectionActionCard()
 
             return true
         }
@@ -308,6 +348,7 @@ class MainFileListFragment : Fragment(),
         override fun onDestroyActionMode(mode: ActionMode?) {
             setDrawerStatus(enabled = true)
             actionMode = null
+            binding.selectionActionCard.isVisible = false
 
             requireActivity().findViewById<View>(R.id.opencloud_app_bar).isFocusableInTouchMode = true
 
@@ -338,6 +379,7 @@ class MainFileListFragment : Fragment(),
         super.onViewCreated(view, savedInstanceState)
         isMultiPersonal = capabilityViewModel.checkMultiPersonal()
         initViews()
+        setupSelectionActions()
         subscribeToViewModels()
     }
 
@@ -606,6 +648,7 @@ class MainFileListFragment : Fragment(),
                 false
             }
             menu?.filterMenuOptions(menuOptions, hasWritePermission)
+            updateSelectionActionCard()
         }
     }
 
@@ -1604,6 +1647,7 @@ class MainFileListFragment : Fragment(),
                 title = selectedItems.toString()
                 invalidate()
             }
+            updateSelectionActionCard()
         }
     }
 
