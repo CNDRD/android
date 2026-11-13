@@ -166,6 +166,8 @@ class FileListAdapter(
 
     private fun selectableItemCount(): Int = files.size - if (hasFooter()) 1 else 0
 
+    fun selectableFileCount(): Int = selectableItemCount()
+
     override fun getItemViewType(position: Int): Int =
 
         if (isFooter(position)) {
