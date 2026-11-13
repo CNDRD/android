@@ -239,12 +239,20 @@ class MainFileListFragment : Fragment(),
         // Keep the last files reachable above the contextual action surface.
         val list = binding.recyclerViewMainFileList
         val bottomPadding = if (isSelecting) {
-            (168 * resources.displayMetrics.density).toInt()
+            // Match the actual panel height instead of assuming a fixed device density.
+            val panelHeight = binding.selectionActionCard.height.takeIf { it > 0 }
+                ?: (136 * resources.displayMetrics.density).toInt()
+            panelHeight + (24 * resources.displayMetrics.density).toInt()
         } else {
             (4 * resources.displayMetrics.density).toInt()
         }
         if (list.paddingBottom != bottomPadding) {
             list.setPadding(list.paddingLeft, list.paddingTop, list.paddingRight, bottomPadding)
+        }
+        if (isSelecting && binding.selectionActionCard.height == 0) {
+            binding.selectionActionCard.post {
+                if (_binding != null && actionMode != null) updateSelectionActionCard()
+            }
         }
         if (count == 0) return
 
