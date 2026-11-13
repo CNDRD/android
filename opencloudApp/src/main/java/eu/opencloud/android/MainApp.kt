@@ -36,9 +36,9 @@ import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import android.widget.CheckBox
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.pm.PackageInfoCompat
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import eu.opencloud.android.data.providers.implementation.OCSharedPreferencesProvider
 
 
@@ -166,7 +166,7 @@ class MainApp : Application() {
                                 val checkboxDialog = activity.layoutInflater.inflate(R.layout.checkbox_dialog, null)
                                 val checkbox = checkboxDialog.findViewById<CheckBox>(R.id.checkbox_dialog)
                                 checkbox.setText(R.string.server_accounts_warning_checkbox_message)
-                                val builder = AlertDialog.Builder(activity).apply {
+                                val builder = MaterialAlertDialogBuilder(activity).apply {
                                     setView(checkboxDialog)
                                     setTitle(R.string.server_accounts_warning_title)
                                     setMessage(R.string.server_accounts_warning_message)

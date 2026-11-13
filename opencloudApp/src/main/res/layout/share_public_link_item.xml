@@ -38,7 +38,7 @@
             android:singleLine="true"
             android:text="@string/username"
             android:textColor="?attr/colorOnSurface"
-            android:textSize="@dimen/two_line_primary_text_size" />
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
 
         <ImageButton
             android:id="@+id/getPublicLinkButton"
@@ -48,7 +48,7 @@
             android:padding="14dp"
             android:src="@drawable/copy_link"
             android:scaleType="centerCrop"
-            android:background="@color/transparent"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/content_description_get_public_link" />
 
         <ImageButton
@@ -59,7 +59,7 @@
             android:padding="14dp"
             android:src="@drawable/ic_action_delete_grey"
             android:scaleType="centerCrop"
-            android:background="@color/transparent"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/content_description_delete_public_link" />
 
         <ImageButton
@@ -69,7 +69,7 @@
             android:layout_gravity="center_vertical"
             android:padding="14dp"
             android:src="@drawable/ic_lead_pencil_grey"
-            android:background="@color/transparent"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/content_description_get_edit_public_link" />
 
     </LinearLayout>

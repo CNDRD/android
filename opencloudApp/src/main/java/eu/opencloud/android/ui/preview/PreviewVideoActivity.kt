@@ -38,7 +38,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.Window
 import androidx.annotation.OptIn
-import androidx.appcompat.app.AlertDialog
 import androidx.core.view.MenuProvider
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -58,6 +57,7 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.ui.PlayerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import eu.opencloud.android.R
 import eu.opencloud.android.databinding.VideoPreviewBinding
@@ -265,7 +265,7 @@ class PreviewVideoActivity : FileActivity(), Player.Listener, OnPrepareVideoPlay
      * @param previewVideoError player error with the needed info
      */
     private fun showAlertDialog(previewVideoError: PreviewVideoError) {
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setMessage(previewVideoError.errorMessage)
             .setPositiveButton(
                 android.R.string.VideoView_error_button

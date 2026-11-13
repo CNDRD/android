@@ -27,7 +27,6 @@ package eu.opencloud.android.ui.activity;
 
 import android.accounts.Account;
 import android.accounts.AuthenticatorException;
-import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -39,6 +38,7 @@ import android.os.Parcelable;
 
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import eu.opencloud.android.R;
 import eu.opencloud.android.domain.files.model.FileListOption;
@@ -269,7 +269,7 @@ public class FileActivity extends DrawerActivity
 
     protected void showRequestAccountChangeNotice(String errorMessage, boolean mustChange) {
         if (mustChange) {
-            new AlertDialog.Builder(this)
+            new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.auth_failure_snackbar_action)
                     .setMessage(errorMessage)
                     .setPositiveButton(android.R.string.yes, (dialog, which) -> requestCredentialsUpdate())

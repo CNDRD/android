@@ -200,78 +200,6 @@ class MainFileListFragment : Fragment(),
     private var succeededTransfers: List<OCTransfer>? = null
     private var numberOfUploadsRefreshed: Int = 0
 
-
-    /**
-     * Secondary Material 3 action surface. The existing ActionMode remains
-     * responsible for overflow operations and permission filtering.
-     */
-    private fun setupSelectionActions() {
-        binding.selectionClose.setOnClickListener { actionMode?.finish() }
-        binding.selectionSelectAll.setOnClickListener {
-            onFileActionChosen(R.id.file_action_select_all)
-        }
-        binding.selectionInvert.setOnClickListener {
-            onFileActionChosen(R.id.action_select_inverse)
-        }
-        binding.selectionMove.setOnClickListener {
-            onFileActionChosen(R.id.action_move)
-        }
-        binding.selectionCopy.setOnClickListener {
-            onFileActionChosen(R.id.action_copy)
-        }
-        binding.selectionDelete.setOnClickListener {
-            onFileActionChosen(R.id.action_remove_file)
-        }
-        binding.selectionShare.setOnClickListener {
-            onFileActionChosen(R.id.action_share_file)
-        }
-        binding.selectionDownload.setOnClickListener {
-            onFileActionChosen(R.id.action_download_file)
-        }
-        binding.selectionOffline.setOnClickListener {
-            onFileActionChosen(R.id.action_set_available_offline)
-        }
-    }
-
-    private fun updateSelectionActionCard() {
-        val count = fileListAdapter.selectedItemCount
-        val isSelecting = count > 0 && actionMode != null
-        binding.selectionActionCard.isVisible = isSelecting
-        // Keep the last files reachable above the contextual action surface.
-        val list = binding.recyclerViewMainFileList
-        val bottomPadding = if (isSelecting) {
-            // Match the actual panel height instead of assuming a fixed device density.
-            val panelHeight = binding.selectionActionCard.height.takeIf { it > 0 }
-                ?: (136 * resources.displayMetrics.density).toInt()
-            panelHeight + (24 * resources.displayMetrics.density).toInt()
-        } else {
-            (4 * resources.displayMetrics.density).toInt()
-        }
-        if (list.paddingBottom != bottomPadding) {
-            list.setPadding(list.paddingLeft, list.paddingTop, list.paddingRight, bottomPadding)
-        }
-        if (isSelecting && binding.selectionActionCard.height == 0) {
-            binding.selectionActionCard.post {
-                if (_binding != null && actionMode != null) updateSelectionActionCard()
-            }
-        }
-        if (count == 0) return
-
-        binding.selectionCountLabel.text = resources.getQuantityString(
-            R.plurals.items_selected_count, count, count
-        )
-        binding.selectionSelectAll.isVisible = count < fileListAdapter.selectableFileCount()
-
-        // Mirror the already-filtered ActionMode menu: never offer an action
-        // that is unavailable for the current selection or account permissions.
-        binding.selectionMove.isVisible = menu?.findItem(R.id.action_move)?.isVisible == true
-        binding.selectionCopy.isVisible = menu?.findItem(R.id.action_copy)?.isVisible == true
-        binding.selectionDelete.isVisible = menu?.findItem(R.id.action_remove_file)?.isVisible == true
-        binding.selectionShare.isVisible = menu?.findItem(R.id.action_share_file)?.isVisible == true
-        binding.selectionDownload.isVisible = menu?.findItem(R.id.action_download_file)?.isVisible == true
-        binding.selectionOffline.isVisible = menu?.findItem(R.id.action_set_available_offline)?.isVisible == true
-    }
-
     private val actionModeCallback: ActionMode.Callback = object : ActionMode.Callback {
 
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
@@ -407,6 +335,77 @@ class MainFileListFragment : Fragment(),
 
             fileListAdapter.clearSelection()
         }
+    }
+
+    /**
+     * Secondary Material 3 action surface. The existing ActionMode remains
+     * responsible for overflow operations and permission filtering.
+     */
+    private fun setupSelectionActions() {
+        binding.selectionClose.setOnClickListener { actionMode?.finish() }
+        binding.selectionSelectAll.setOnClickListener {
+            onFileActionChosen(R.id.file_action_select_all)
+        }
+        binding.selectionInvert.setOnClickListener {
+            onFileActionChosen(R.id.action_select_inverse)
+        }
+        binding.selectionMove.setOnClickListener {
+            onFileActionChosen(R.id.action_move)
+        }
+        binding.selectionCopy.setOnClickListener {
+            onFileActionChosen(R.id.action_copy)
+        }
+        binding.selectionDelete.setOnClickListener {
+            onFileActionChosen(R.id.action_remove_file)
+        }
+        binding.selectionShare.setOnClickListener {
+            onFileActionChosen(R.id.action_share_file)
+        }
+        binding.selectionDownload.setOnClickListener {
+            onFileActionChosen(R.id.action_download_file)
+        }
+        binding.selectionOffline.setOnClickListener {
+            onFileActionChosen(R.id.action_set_available_offline)
+        }
+    }
+
+    private fun updateSelectionActionCard() {
+        val count = fileListAdapter.selectedItemCount
+        val isSelecting = count > 0 && actionMode != null
+        binding.selectionActionCard.isVisible = isSelecting
+        // Keep the last files reachable above the contextual action surface.
+        val list = binding.recyclerViewMainFileList
+        val bottomPadding = if (isSelecting) {
+            // Match the actual panel height instead of assuming a fixed device density.
+            val panelHeight = binding.selectionActionCard.height.takeIf { it > 0 }
+                ?: (136 * resources.displayMetrics.density).toInt()
+            panelHeight + (24 * resources.displayMetrics.density).toInt()
+        } else {
+            (4 * resources.displayMetrics.density).toInt()
+        }
+        if (list.paddingBottom != bottomPadding) {
+            list.setPadding(list.paddingLeft, list.paddingTop, list.paddingRight, bottomPadding)
+        }
+        if (isSelecting && binding.selectionActionCard.height == 0) {
+            binding.selectionActionCard.post {
+                if (_binding != null && actionMode != null) updateSelectionActionCard()
+            }
+        }
+        if (count == 0) return
+
+        binding.selectionCountLabel.text = resources.getQuantityString(
+            R.plurals.items_selected_count, count, count
+        )
+        binding.selectionSelectAll.isVisible = count < fileListAdapter.selectableFileCount()
+
+        // Mirror the already-filtered ActionMode menu: never offer an action
+        // that is unavailable for the current selection or account permissions.
+        binding.selectionMove.isVisible = menu?.findItem(R.id.action_move)?.isVisible == true
+        binding.selectionCopy.isVisible = menu?.findItem(R.id.action_copy)?.isVisible == true
+        binding.selectionDelete.isVisible = menu?.findItem(R.id.action_remove_file)?.isVisible == true
+        binding.selectionShare.isVisible = menu?.findItem(R.id.action_share_file)?.isVisible == true
+        binding.selectionDownload.isVisible = menu?.findItem(R.id.action_download_file)?.isVisible == true
+        binding.selectionOffline.isVisible = menu?.findItem(R.id.action_set_available_offline)?.isVisible == true
     }
 
     override fun onCreateView(
