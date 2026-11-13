@@ -276,11 +276,15 @@ class FileListAdapter(
             }
             val checkBoxV = holder.itemView.findViewById<ImageView>(R.id.custom_checkbox).apply {
                 isVisible = hasActiveSelection
+                isImportantForAccessibility = false
             }
 
             // Preserve the XML ripple and rounded Material 3 selection surface.
             // setBackgroundColor() would replace the drawable and remove touch feedback.
             holder.itemView.isSelected = isSelected(position)
+            holder.itemView.isActivated = holder.itemView.isSelected
+            holder.itemView.contentDescription = name
+            holder.itemView.isLongClickable = true
             checkBoxV.setImageResource(
                 if (holder.itemView.isSelected) R.drawable.ic_checkbox_marked
                 else R.drawable.ic_checkbox_blank_outline
