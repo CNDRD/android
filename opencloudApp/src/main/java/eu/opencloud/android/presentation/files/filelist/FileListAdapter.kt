@@ -276,13 +276,13 @@ class FileListAdapter(
                 isVisible = hasActiveSelection
             }
 
-            if (isSelected(position)) {
-                holder.itemView.setBackgroundColor(colorSelection)
-                checkBoxV.setImageResource(R.drawable.ic_checkbox_marked)
-            } else {
-                holder.itemView.setBackgroundColor(colorSurface)
-                checkBoxV.setImageResource(R.drawable.ic_checkbox_blank_outline)
-            }
+            // Preserve the XML ripple and rounded Material 3 selection surface.
+            // setBackgroundColor() would replace the drawable and remove touch feedback.
+            holder.itemView.isSelected = isSelected(position)
+            checkBoxV.setImageResource(
+                if (holder.itemView.isSelected) R.drawable.ic_checkbox_marked
+                else R.drawable.ic_checkbox_blank_outline
+            )
 
             if (file.isFolder) {
                 // Folder
