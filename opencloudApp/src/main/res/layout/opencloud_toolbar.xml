@@ -17,19 +17,21 @@
     android:id="@+id/opencloud_app_bar"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/actionbar_start_color"
     android:theme="@style/openCloud.Appbar"
     android:focusableInTouchMode="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/root_toolbar"
         android:layout_width="match_parent"
-        android:layout_height="?android:actionBarSize">
+        android:layout_height="64dp">
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/root_toolbar_left_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_marginHorizontal="@dimen/standard_half_margin"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:scaleType="center"
             android:padding="@dimen/standard_half_padding"
             android:src="@drawable/ic_drawer_icon"
             android:contentDescription="@string/content_description_menu"
@@ -63,7 +65,7 @@
             android:maxLines="1"
             android:paddingHorizontal="@dimen/standard_half_padding"
             android:textColor="?attr/colorOnPrimary"
-            android:textSize="@dimen/toolbar_title_text_size"
+            android:textAppearance="?attr/textAppearanceTitleLarge"
             android:contentDescription="@string/content_description_search"
             app:drawableEndCompat="@drawable/ic_search"
             app:drawableTint="?attr/colorOnPrimary"
@@ -75,6 +77,7 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/root_toolbar_avatar"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:layout_width="@dimen/toolbar_avatar_size"
             android:layout_height="@dimen/toolbar_avatar_size"
             android:layout_marginHorizontal="@dimen/standard_half_margin"
@@ -86,17 +89,18 @@
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <androidx.appcompat.widget.Toolbar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/standard_toolbar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="64dp"
         android:background="?attr/colorPrimary"
         android:theme="@style/openCloud.Appbar"
         android:visibility="gone"
-        android:layout_marginEnd="@dimen/standard_margin"
         android:focusable="true"
         android:focusableInTouchMode="false"
         android:accessibilityHeading="true"
+        app:titleTextAppearance="?attr/textAppearanceTitleLarge"
+        app:titleTextColor="?attr/colorOnPrimary"
         app:navigationContentDescription="@string/common_back"
         app:popupTheme="?attr/actionBarPopupTheme" />
 </com.google.android.material.appbar.AppBarLayout>

@@ -124,7 +124,7 @@ class FilterFileMenuOptionsUseCase(
             optionsToShow.add(FileMenuOption.SELECT_INVERSE)
         }
         if (!params.onlyAvailableOfflineFiles && shareViaLinkOrWithUsersAllowed &&
-            state.resharingAllowed && state.isPersonalSpace &&
+            state.resharingAllowed &&
             state.hasResharePermission
         ) {
             optionsToShow.add(FileMenuOption.SHARE)

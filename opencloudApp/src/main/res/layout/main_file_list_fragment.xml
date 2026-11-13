@@ -23,7 +23,6 @@
 
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:fab="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/coordinator_layout"
     android:layout_width="match_parent"
@@ -39,9 +38,9 @@
             android:id="@+id/options_layout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            fab:layout_constraintEnd_toEndOf="parent"
-            fab:layout_constraintStart_toStartOf="parent"
-            fab:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ProgressBar
             android:id="@+id/syncProgressBar"
@@ -52,15 +51,16 @@
             android:indeterminate="false"
             android:indeterminateOnly="false"
             android:visibility="visible"
-            fab:layout_constraintTop_toBottomOf="@id/options_layout" />
+            app:layout_constraintTop_toBottomOf="@id/options_layout" />
 
         <View
             android:id="@+id/shadow_view"
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="@dimen/file_list_progress_bar_height"
             android:layout_margin="0dp"
             android:background="@drawable/shadow_gradient"
-            fab:layout_constraintTop_toBottomOf="@id/options_layout" />
+            app:layout_constraintTop_toBottomOf="@id/options_layout" />
 
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/swipeRefresh_main_file_list"
@@ -83,15 +83,11 @@
                     android:layout_marginTop="@dimen/standard_quarter_margin"
                     android:text="@string/fab_refresh_text"
                     android:textAllCaps="false"
-                    android:textColor="?attr/colorOnPrimary"
-                    android:theme="@style/Theme.MaterialComponents.Bridge"
                     android:visibility="gone"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:icon="@drawable/ic_action_refresh"
-                    app:iconTint="?attr/colorOnPrimary"
-                    app:backgroundTint="@color/primary_button_background_color"/>
+                    app:icon="@drawable/ic_action_refresh" />
 
                 <include
                     android:id="@+id/space_header"
@@ -107,6 +103,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:scrollbars="vertical"
+                    android:clipToPadding="false"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
                     tools:listitem="@layout/item_file_list"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/space_header"/>
@@ -127,74 +126,219 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <com.getbase.floatingactionbutton.FloatingActionsMenu
-        android:id="@+id/fab_main"
-        android:layout_width="wrap_content"
+
+    <!-- Contextual Material 3 action surface, shown only during multi-selection. -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/selection_action_card"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginBottom="12dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="6dp"
+        app:strokeColor="?attr/colorOutline"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/selection_count_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:paddingHorizontal="8dp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <ImageButton
+                    android:id="@+id/selection_close"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/common_back"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_close"
+                    app:tint="?attr/colorOnSurface" />
+            </LinearLayout>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fillViewport="true"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/selection_select_all"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/actionbar_select_all" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/selection_invert"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/actionbar_select_inverse" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/selection_share"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/action_share" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/selection_download"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/filedetails_download" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/selection_offline"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/set_available_offline" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/selection_move"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/actionbar_move" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/selection_copy"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/copy" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/selection_delete"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/common_remove" />
+
+                </LinearLayout>
+            </HorizontalScrollView>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
         android:layout_gravity="bottom|end"
-        android:layout_marginEnd="@dimen/standard_margin"
-        android:layout_marginBottom="@dimen/standard_margin"
-        android:visibility="visible"
-        fab:fab_addButtonColorNormal="@color/primary_button_background_color"
-        fab:fab_addButtonColorPressed="@color/opencloud_petrol"
-        fab:fab_addButtonPlusIconColor="?attr/colorOnPrimary"
-        fab:fab_labelStyle="@style/menu_labels_style"
-        fab:layout_dodgeInsetEdges="bottom">
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:paddingTop="12dp">
 
-        <com.getbase.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_upload"
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/fab_actions"
+            style="@style/Widget.Material3.CardView.Elevated"
+            android:layout_width="256dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="?attr/colorSurfaceContainer"
+            app:layout_constraintBottom_toTopOf="@id/fab_main"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constrainedHeight="true"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1">
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/fab_upload"
+                        style="@style/Widget.openCloud.FileActionButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/actionbar_upload"
+                        app:icon="@drawable/ic_action_upload" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/fab_take_photo"
+                        style="@style/Widget.openCloud.FileActionButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/fab_take_photo"
+                        app:icon="@drawable/ic_action_take_photo" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/fab_mkdir"
+                        style="@style/Widget.openCloud.FileActionButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/actionbar_mkdir"
+                        app:icon="@drawable/ic_action_create_dir" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/fab_newfile"
+                        style="@style/Widget.openCloud.FileActionButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/fab_new_file"
+                        app:icon="@drawable/ic_action_create_file" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/fab_newshortcut"
+                        style="@style/Widget.openCloud.FileActionButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/fab_new_shortcut"
+                        app:icon="@drawable/ic_action_open_shortcut" />
+
+                </LinearLayout>
+            </ScrollView>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_main"
+            style="@style/Widget.Material3.FloatingActionButton.Primary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/actionbar_upload"
-            fab:fab_colorNormal="@color/primary_button_background_color"
-            fab:fab_colorPressed="@color/opencloud_petrol"
-            fab:fab_icon="@drawable/ic_action_upload"
-            fab:fab_size="mini"
-            fab:fab_title="@string/actionbar_upload" />
-
-        <com.getbase.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_take_photo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:contentDescription="@string/fab_take_photo"
-            fab:fab_colorNormal="@color/primary_button_background_color"
-            fab:fab_colorPressed="@color/opencloud_petrol"
-            fab:fab_icon="@drawable/ic_action_take_photo"
-            fab:fab_size="mini"
-            fab:fab_title="@string/fab_take_photo" />
-
-        <com.getbase.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_mkdir"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:contentDescription="@string/actionbar_mkdir"
-            fab:fab_colorNormal="@color/primary_button_background_color"
-            fab:fab_colorPressed="@color/opencloud_petrol"
-            fab:fab_icon="@drawable/ic_action_create_dir"
-            fab:fab_size="mini"
-            fab:fab_title="@string/actionbar_mkdir" />
-
-        <com.getbase.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_newfile"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:contentDescription="@string/fab_new_file"
-            fab:fab_colorNormal="@color/primary_button_background_color"
-            fab:fab_colorPressed="@color/opencloud_petrol"
-            fab:fab_icon="@drawable/ic_action_create_file"
-            fab:fab_size="mini"
-            fab:fab_title="@string/fab_new_file" />
-
-        <com.getbase.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_newshortcut"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:contentDescription="@string/fab_new_shortcut"
-            fab:fab_colorNormal="@color/primary_button_background_color"
-            fab:fab_colorPressed="@color/opencloud_petrol"
-            fab:fab_icon="@drawable/ic_action_open_shortcut"
-            fab:fab_size="mini"
-            fab:fab_title="@string/fab_new_shortcut" />
-
-    </com.getbase.floatingactionbutton.FloatingActionsMenu>
+            android:contentDescription="@string/content_description_add_new_content"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:srcCompat="@drawable/ic_add" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

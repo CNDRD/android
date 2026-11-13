@@ -40,7 +40,7 @@
         android:layout_height="0.5dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
-        android:background="@color/color_accent" />
+        android:background="?attr/colorOutlineVariant" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -66,7 +66,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@color/color_accent"
+            android:backgroundTint="?attr/colorPrimary"
             android:textColor="?attr/colorOnPrimary"
             android:textSize="12sp"
             android:text="@string/button_no_thanks_name" />
@@ -78,7 +78,7 @@
             android:layout_weight="1"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
-            android:background="@color/color_accent"
+            android:backgroundTint="?attr/colorPrimary"
             android:textColor="?attr/colorOnPrimary"
             android:textSize="12sp"
             android:text="@string/button_later_name" />
@@ -88,7 +88,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@color/color_accent"
+            android:backgroundTint="?attr/colorPrimary"
             android:textColor="?attr/colorOnPrimary"
             android:textSize="12sp"
             android:text="@string/button_rate_now_name" />

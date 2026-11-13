@@ -54,11 +54,15 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import eu.opencloud.android.presentation.material3.OpenCloudMaterialTheme
+import eu.opencloud.android.presentation.material3.UploadSourceSheet
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import coil.load
 import com.bumptech.glide.Glide
-import com.getbase.floatingactionbutton.AddFloatingActionButton
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.snackbar.Snackbar
@@ -166,6 +170,8 @@ class MainFileListFragment : Fragment(),
     private var _binding: MainFileListFragmentBinding? = null
     private val binding get() = _binding!!
 
+    private var uploadSheetView: ComposeView? = null
+
     private lateinit var layoutManager: StaggeredGridLayoutManager
     private lateinit var fileListAdapter: FileListAdapter
     private lateinit var viewType: ViewType
@@ -211,6 +217,8 @@ class MainFileListFragment : Fragment(),
             val window = activity?.window
             statusBarColor = window?.statusBarColor ?: -1
 
+            updateSelectionActionCard()
+
             // Hide FAB in multi selection mode
             toggleFabVisibility(false)
             fileActions?.setBottomBarVisibility(false)
@@ -236,16 +244,17 @@ class MainFileListFragment : Fragment(),
 
             checkedFiles = checkedFilesWithSyncInfo.map { it.file }
 
-            val checkedFilesSync = checkedFilesWithSyncInfo.map {
+            val checkedFilesSync = checkedFilesWithSyncInfo.mapNotNull {
+                val fileId = it.file.id ?: return@mapNotNull null
                 OCFileSyncInfo(
-                    fileId = it.file.id!!,
+                    fileId = fileId,
                     uploadWorkerUuid = it.uploadWorkerUuid,
                     downloadWorkerUuid = it.downloadWorkerUuid,
                     isSynchronizing = it.isSynchronizing
                 )
             }
 
-            val displaySelectAll = checkedCount != fileListAdapter.itemCount - 1 // -1 because one of them is the footer :S
+            val displaySelectAll = checkedCount != fileListAdapter.selectableFileCount()
             mainFileListViewModel.filterMenuOptions(
                 checkedFiles, checkedFilesSync,
                 displaySelectAll, isMultiselection = true
@@ -262,6 +271,7 @@ class MainFileListFragment : Fragment(),
                 }
             }
             setRolesAccessibilityToMenuItems()
+            updateSelectionActionCard()
 
             return true
         }
@@ -302,6 +312,12 @@ class MainFileListFragment : Fragment(),
         override fun onDestroyActionMode(mode: ActionMode?) {
             setDrawerStatus(enabled = true)
             actionMode = null
+            binding.selectionActionCard.isVisible = false
+            val list = binding.recyclerViewMainFileList
+            list.setPadding(
+                list.paddingLeft, list.paddingTop, list.paddingRight,
+                (4 * resources.displayMetrics.density).toInt()
+            )
 
             requireActivity().findViewById<View>(R.id.opencloud_app_bar).isFocusableInTouchMode = true
 
@@ -320,6 +336,77 @@ class MainFileListFragment : Fragment(),
         }
     }
 
+    /**
+     * Secondary Material 3 action surface. The existing ActionMode remains
+     * responsible for overflow operations and permission filtering.
+     */
+    private fun setupSelectionActions() {
+        binding.selectionClose.setOnClickListener { actionMode?.finish() }
+        binding.selectionSelectAll.setOnClickListener {
+            onFileActionChosen(R.id.file_action_select_all)
+        }
+        binding.selectionInvert.setOnClickListener {
+            onFileActionChosen(R.id.action_select_inverse)
+        }
+        binding.selectionMove.setOnClickListener {
+            onFileActionChosen(R.id.action_move)
+        }
+        binding.selectionCopy.setOnClickListener {
+            onFileActionChosen(R.id.action_copy)
+        }
+        binding.selectionDelete.setOnClickListener {
+            onFileActionChosen(R.id.action_remove_file)
+        }
+        binding.selectionShare.setOnClickListener {
+            onFileActionChosen(R.id.action_share_file)
+        }
+        binding.selectionDownload.setOnClickListener {
+            onFileActionChosen(R.id.action_download_file)
+        }
+        binding.selectionOffline.setOnClickListener {
+            onFileActionChosen(R.id.action_set_available_offline)
+        }
+    }
+
+    private fun updateSelectionActionCard() {
+        val count = fileListAdapter.selectedItemCount
+        val isSelecting = count > 0 && actionMode != null
+        binding.selectionActionCard.isVisible = isSelecting
+        // Keep the last files reachable above the contextual action surface.
+        val list = binding.recyclerViewMainFileList
+        val bottomPadding = if (isSelecting) {
+            // Match the actual panel height instead of assuming a fixed device density.
+            val panelHeight = binding.selectionActionCard.height.takeIf { it > 0 }
+                ?: (136 * resources.displayMetrics.density).toInt()
+            panelHeight + (24 * resources.displayMetrics.density).toInt()
+        } else {
+            (4 * resources.displayMetrics.density).toInt()
+        }
+        if (list.paddingBottom != bottomPadding) {
+            list.setPadding(list.paddingLeft, list.paddingTop, list.paddingRight, bottomPadding)
+        }
+        if (isSelecting && binding.selectionActionCard.height == 0) {
+            binding.selectionActionCard.post {
+                if (_binding != null && actionMode != null) updateSelectionActionCard()
+            }
+        }
+        if (count == 0) return
+
+        binding.selectionCountLabel.text = resources.getQuantityString(
+            R.plurals.items_selected_count, count, count
+        )
+        binding.selectionSelectAll.isVisible = count < fileListAdapter.selectableFileCount()
+
+        // Mirror the already-filtered ActionMode menu: never offer an action
+        // that is unavailable for the current selection or account permissions.
+        binding.selectionMove.isVisible = menu?.findItem(R.id.action_move)?.isVisible == true
+        binding.selectionCopy.isVisible = menu?.findItem(R.id.action_copy)?.isVisible == true
+        binding.selectionDelete.isVisible = menu?.findItem(R.id.action_remove_file)?.isVisible == true
+        binding.selectionShare.isVisible = menu?.findItem(R.id.action_share_file)?.isVisible == true
+        binding.selectionDownload.isVisible = menu?.findItem(R.id.action_download_file)?.isVisible == true
+        binding.selectionOffline.isVisible = menu?.findItem(R.id.action_set_available_offline)?.isVisible == true
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -332,6 +419,8 @@ class MainFileListFragment : Fragment(),
         super.onViewCreated(view, savedInstanceState)
         isMultiPersonal = capabilityViewModel.checkMultiPersonal()
         initViews()
+        setupSelectionActions()
+        setupFabActions()
         subscribeToViewModels()
     }
 
@@ -359,9 +448,13 @@ class MainFileListFragment : Fragment(),
             updateActionModeAfterTogglingSelected()
             true
         }
-        if (isPickingAFolder() || getCurrentSpace()?.isPersonal == false) {
+        if (isPickingAFolder()) {
             menu.findItem(R.id.action_share_current_folder)?.itemId?.let { menu.removeItem(it) }
         } else {
+            menu.findItem(R.id.action_share_current_folder)?.apply {
+                setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_NEVER)
+                if (getCurrentSpace()?.isProject == true) setTitle(R.string.space_share_title)
+            }
             menu.findItem(R.id.action_share_current_folder)?.setOnMenuItemClickListener {
                 fileActions?.onShareFileClicked(mainFileListViewModel.getFile())
                 true
@@ -377,7 +470,7 @@ class MainFileListFragment : Fragment(),
         if (mainFileListViewModel.isGridModeSetAsPreferred()) {
             layoutManager =
                 StaggeredGridLayoutManager(
-                    ColumnQuantity(requireContext(), R.layout.grid_item).calculateNoOfColumns(),
+                    preferredGridColumnCount(),
                     RecyclerView.VERTICAL
                 )
             viewType = ViewType.VIEW_TYPE_GRID
@@ -428,11 +521,22 @@ class MainFileListFragment : Fragment(),
 
         // Set SortOptions and its listeners
         binding.optionsLayout.onSortOptionsListener = this
+        binding.optionsLayout.onSortSelected = { type, order ->
+            binding.optionsLayout.sortTypeSelected = type
+            binding.optionsLayout.sortOrderSelected = order
+            mainFileListViewModel.updateSortTypeAndOrder(type, order)
+        }
+        if (!isPickingAFolder()) {
+            binding.optionsLayout.preferredGridColumns = mainFileListViewModel.getPreferredGridColumns()
+            binding.optionsLayout.onGridColumnsSelected = { columns ->
+                mainFileListViewModel.setPreferredGridColumns(columns)
+                binding.optionsLayout.preferredGridColumns = columns
+                onViewTypeListener(ViewType.VIEW_TYPE_GRID)
+            }
+        }
         setViewTypeSelector(SortOptionsView.AdditionalView.CREATE_FOLDER)
 
         showOrHideFab(requireArguments().getParcelable(ARG_FILE_LIST_OPTION)!!, requireArguments().getParcelable(ARG_INITIAL_FOLDER_TO_DISPLAY)!!)
-
-        setFabMainContentDescription()
 
         setTextHintRootToolbar()
     }
@@ -536,8 +640,8 @@ class MainFileListFragment : Fragment(),
     }
     private fun observeAppRegistryToCreateFiles() {
         collectLatestLifecycleFlow(mainFileListViewModel.appRegistryToCreateFiles) { listAppRegistry ->
-            binding.fabNewfile.isVisible = listAppRegistry.isNotEmpty()
-            registerFabNewFileListener(listAppRegistry)
+            binding.fabNewfile.isVisible =
+                mainFileListViewModel.getFile().hasAddFilePermission && listAppRegistry.isNotEmpty()
         }
     }
 
@@ -583,6 +687,7 @@ class MainFileListFragment : Fragment(),
                 false
             }
             menu?.filterMenuOptions(menuOptions, hasWritePermission)
+            updateSelectionActionCard()
         }
     }
 
@@ -964,6 +1069,7 @@ class MainFileListFragment : Fragment(),
     }
 
     override fun onViewTypeListener(viewType: ViewType) {
+        this.viewType = viewType
         binding.optionsLayout.viewTypeSelected = viewType
 
         if (viewType == ViewType.VIEW_TYPE_LIST) {
@@ -972,11 +1078,15 @@ class MainFileListFragment : Fragment(),
 
         } else {
             mainFileListViewModel.setGridModeAsPreferred()
-            layoutManager.spanCount = ColumnQuantity(requireContext(), R.layout.grid_item).calculateNoOfColumns()
+            layoutManager.spanCount = preferredGridColumnCount()
         }
 
         fileListAdapter.notifyItemRangeChanged(0, fileListAdapter.itemCount)
     }
+
+    private fun preferredGridColumnCount(): Int =
+        mainFileListViewModel.getPreferredGridColumns().takeIf { it != 0 }
+            ?: ColumnQuantity(requireContext(), R.layout.grid_item).calculateNoOfColumns()
 
     override fun onSortSelected(sortType: SortType) {
         binding.optionsLayout.sortTypeSelected = sortType
@@ -987,6 +1097,12 @@ class MainFileListFragment : Fragment(),
     private fun isPickingAFolder(): Boolean {
         val args = arguments
         return args != null && args.getBoolean(ARG_PICKING_A_FOLDER, false)
+    }
+
+    override fun onDestroyView() {
+        collapseFab()
+        dismissUploadSheet()
+        super.onDestroyView()
     }
 
     override fun onDestroy() {
@@ -1016,160 +1132,102 @@ class MainFileListFragment : Fragment(),
     private fun showOrHideFab(newFileListOption: FileListOption, currentFolder: OCFile) {
         val isFabSupportedView = newFileListOption.isAllFiles() ||
                 (newFileListOption.isSharedByLink() && currentFolder.remotePath != ROOT_PATH)
-        if (!isFabSupportedView || isPickingAFolder() ||
-            (!currentFolder.hasAddFilePermission && !currentFolder.hasAddSubdirectoriesPermission)) {
-            toggleFabVisibility(false)
-        } else {
-            toggleFabVisibility(true)
-            if (!currentFolder.hasAddFilePermission) {
-                binding.fabUpload.isVisible = false
-                binding.fabTakePhoto.isVisible = false
-                binding.fabNewfile.isVisible = false
-            } else if (!currentFolder.hasAddSubdirectoriesPermission) {
-                binding.fabMkdir.isVisible = false
-            }
-            registerFabMainListener()
-            registerFabUploadListener()
-            registerFabTakePhotoListener()
-            registerFabMkDirListener()
-            registerFabNewShortcutListener()
-            binding.apply {
-                fabUpload.isFocusable = false
-                fabTakePhoto.isFocusable = false
-                fabMkdir.isFocusable = false
-                fabNewfile.isFocusable = false
-                fabNewshortcut.isFocusable = false
-            }
-        }
+        val canAddFiles = currentFolder.hasAddFilePermission
+        val canAddFolders = currentFolder.hasAddSubdirectoriesPermission
+        toggleFabVisibility(
+            isFabSupportedView && !isPickingAFolder() && (canAddFiles || canAddFolders)
+        )
+        binding.fabUpload.isVisible = canAddFiles
+        binding.fabTakePhoto.isVisible = canAddFiles
+        binding.fabMkdir.isVisible = canAddFolders
+        binding.fabNewfile.isVisible = canAddFiles && mainFileListViewModel.appRegistryToCreateFiles.value.isNotEmpty()
     }
 
-    /**
-     * Sets the 'visibility' state of the main FAB and its mini FABs contained in the fragment.
-     *
-     * When 'false' is set, FAB visibility is set to View.GONE programmatically.
-     * Mini FABs are automatically hidden after hiding the main one.
-     *
-     * @param shouldBeShown Desired visibility for the FAB.
-     */
     private fun toggleFabVisibility(shouldBeShown: Boolean) {
+        if (!shouldBeShown) collapseFab()
         binding.fabMain.isVisible = shouldBeShown
-        binding.fabUpload.isVisible = shouldBeShown
-        binding.fabTakePhoto.isVisible = shouldBeShown
-        binding.fabMkdir.isVisible = shouldBeShown
     }
 
-    private fun registerFabMainListener() {
-        binding.apply {
-            fabMain.findViewById<View>(R.id.fab_expand_menu_button).setOnClickListener {
-                fabMain.toggle()
-                fabUpload.isFocusable = isFabExpanded()
-                fabTakePhoto.isFocusable = isFabExpanded()
-                fabMkdir.isFocusable = isFabExpanded()
-                fabNewfile.isFocusable = isFabExpanded()
-                fabNewshortcut.isFocusable = isFabExpanded()
-                if (fabMain.isExpanded) {
-                    binding.fabMain.findViewById<AddFloatingActionButton>(com.getbase.floatingactionbutton.R.id.fab_expand_menu_button)
-                        .contentDescription = getString(R.string.content_description_add_new_content_expanded)
-                } else {
-                    setFabMainContentDescription()
-                }
+    private fun setupFabActions() = with(binding) {
+        fabMain.setOnClickListener {
+            if (isFabExpanded()) {
+                collapseFab()
+            } else {
+                fabActions.isVisible = true
+                fabMain.setImageResource(R.drawable.ic_close)
+                fabMain.contentDescription = getString(R.string.content_description_add_new_content_expanded)
             }
         }
-    }
-
-    /**
-     * Registers [android.view.View.OnClickListener] on the 'Upload' mini FAB for the linked action.
-     */
-    private fun registerFabUploadListener() {
-        binding.fabUpload.setOnClickListener {
+        fabUpload.setOnClickListener {
+            collapseFab()
             openBottomSheetToUploadFiles()
-            collapseFab()
         }
-    }
-
-    /**
-     * Registers [android.view.View.OnClickListener] on the 'Take a photo' mini FAB for the linked action.
-     */
-    private fun registerFabTakePhotoListener() {
-        binding.fabTakePhoto.setOnClickListener {
+        fabTakePhoto.setOnClickListener {
+            collapseFab()
             uploadActions?.uploadFromCamera()
-            collapseFab()
         }
-    }
-
-    /**
-     * Registers [android.view.View.OnClickListener] on the 'New folder' mini FAB for the linked action.
-     */
-    private fun registerFabMkDirListener() {
-        binding.fabMkdir.setOnClickListener {
-            val dialog = CreateFolderDialogFragment.newInstance(mainFileListViewModel.getFile(), this)
+        fabMkdir.setOnClickListener {
+            collapseFab()
+            val dialog = CreateFolderDialogFragment.newInstance(mainFileListViewModel.getFile(), this@MainFileListFragment)
             dialog.show(requireActivity().supportFragmentManager, DIALOG_CREATE_FOLDER)
-            collapseFab()
         }
-    }
-
-    /**
-     * Registers [android.view.View.OnClickListener] on the 'New document' mini FAB for the linked action.
-     */
-    private fun registerFabNewFileListener(listAppRegistry: List<AppRegistryMimeType>) {
-        binding.fabNewfile.setOnClickListener {
-            openBottomSheetToCreateNewFile(listAppRegistry)
+        fabNewfile.setOnClickListener {
             collapseFab()
+            openBottomSheetToCreateNewFile(mainFileListViewModel.appRegistryToCreateFiles.value)
         }
-    }
-
-    /**
-     * Registers [android.view.View.OnClickListener] on the 'New shortcut' mini FAB for the linked action.
-     */
-    private fun registerFabNewShortcutListener() {
-        binding.fabNewshortcut.setOnClickListener {
-            val dialog = CreateShortcutDialogFragment.newInstance(mainFileListViewModel.getFile(), this)
+        fabNewshortcut.setOnClickListener {
+            collapseFab()
+            val dialog = CreateShortcutDialogFragment.newInstance(mainFileListViewModel.getFile(), this@MainFileListFragment)
             dialog.show(requireActivity().supportFragmentManager, DIALOG_CREATE_SHORTCUT)
-            collapseFab()
         }
     }
 
     fun collapseFab() {
-        binding.apply {
-            fabMain.collapse()
-            fabUpload.isFocusable = false
-            fabTakePhoto.isFocusable = false
-            fabMkdir.isFocusable = false
-            fabNewfile.isFocusable = false
-            fabNewshortcut.isFocusable = false
+        _binding?.apply {
+            fabActions.isVisible = false
+            fabMain.setImageResource(R.drawable.ic_add)
+            fabMain.contentDescription = getString(R.string.content_description_add_new_content)
         }
-
     }
 
-    fun isFabExpanded() = binding.fabMain.isExpanded
-
-    fun setFabMainContentDescription() {
-        binding.fabMain.findViewById<AddFloatingActionButton>(com.getbase.floatingactionbutton.R.id.fab_expand_menu_button).contentDescription =
-            getString(R.string.content_description_add_new_content)
-    }
+    fun isFabExpanded() = _binding?.fabActions?.isVisible == true
 
     private fun openBottomSheetToUploadFiles() {
-        val uploadBottomSheet = layoutInflater.inflate(R.layout.upload_bottom_sheet_fragment, null)
-        val dialog = BottomSheetDialog(requireContext())
-        dialog.setContentView(uploadBottomSheet)
-        val uploadFromFilesItemView: BottomSheetFragmentItemView = uploadBottomSheet.findViewById(R.id.upload_from_files_item_view)
-        val uploadFromCameraItemView: BottomSheetFragmentItemView = uploadBottomSheet.findViewById(R.id.upload_from_camera_item_view)
-        val uploadToTextView = uploadBottomSheet.findViewById<TextView>(R.id.upload_to_text_view)
-        uploadFromFilesItemView.setOnClickListener {
-            uploadActions?.uploadFromFileSystem()
-            dialog.hide()
+        if (uploadSheetView != null) return
+        val folder = mainFileListViewModel.getFile()
+        val destination = if (folder.remotePath == ROOT_PATH) {
+            getString(R.string.default_display_name_for_root_folder)
+        } else folder.fileName
+        val sheet = ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                OpenCloudMaterialTheme {
+                    UploadSourceSheet(
+                        destination = destination,
+                        onDismiss = { dismissUploadSheet() },
+                        onFiles = {
+                            dismissUploadSheet()
+                            uploadActions?.uploadFromFileSystem()
+                        },
+                        onCamera = {
+                            dismissUploadSheet()
+                            uploadActions?.uploadFromCamera()
+                        },
+                    )
+                }
+            }
         }
-        uploadFromCameraItemView.setOnClickListener {
-            uploadActions?.uploadFromCamera()
-            dialog.hide()
-        }
-        uploadToTextView.text = String.format(
-            resources.getString(R.string.upload_to),
-            resources.getString(R.string.app_name)
-        )
-        val uploadBottomSheetBehavior: BottomSheetBehavior<*> = BottomSheetBehavior.from(uploadBottomSheet.parent as View)
-        dialog.setOnShowListener { uploadBottomSheetBehavior.setPeekHeight(uploadBottomSheet.measuredHeight) }
-        dialog.show()
+        uploadSheetView = sheet
+        binding.root.addView(sheet, ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
+        ))
+    }
+
+    private fun dismissUploadSheet() {
+        val sheet = uploadSheetView ?: return
+        uploadSheetView = null
+        sheet.disposeComposition()
+        (sheet.parent as? ViewGroup)?.removeView(sheet)
     }
 
     private fun openBottomSheetToCreateNewFile(listAppRegistry: List<AppRegistryMimeType>) {
@@ -1209,7 +1267,7 @@ class MainFileListFragment : Fragment(),
         val inputLayout: TextInputLayout = dialogView.findViewById(R.id.inputTextLayout)
         input.requestFocus()
 
-        val builder = AlertDialog.Builder(requireContext()).apply {
+        val builder = MaterialAlertDialogBuilder(requireContext()).apply {
             setView(dialogView)
             setTitle(R.string.uploader_upload_text_dialog_title)
             setCancelable(false)
@@ -1356,21 +1414,19 @@ class MainFileListFragment : Fragment(),
      */
     @SuppressLint("UseRequireInsteadOfGet")
     private fun onFileActionChosen(menuId: Int?): Boolean {
-        var handled: Boolean
-        val checkedFilesWithSyncInfo = fileListAdapter.getCheckedItems() as ArrayList<OCFileWithSyncInfo>
+        val checkedFilesWithSyncInfo = fileListAdapter.getCheckedItems()
+        if (checkedFilesWithSyncInfo.isEmpty()) return false
 
-        if (checkedFilesWithSyncInfo.isEmpty()) {
-            return false
-        } else if (checkedFilesWithSyncInfo.size == 1) {
-            /// Action possible on a single file
-            val singleFile = checkedFilesWithSyncInfo.first().file
-            handled = onSingleFileActionChosen(menuId, singleFile)
+        // Single-file actions take precedence. Only fall back to batch actions
+        // when the selected menu item was not handled by the single-file handler.
+        if (checkedFilesWithSyncInfo.size == 1 &&
+            onSingleFileActionChosen(menuId, checkedFilesWithSyncInfo.first().file)
+        ) {
+            return true
         }
 
-        /// Actions possible on a batch of files
-        val checkedFiles = checkedFilesWithSyncInfo.map { it.file } as ArrayList<OCFile>
-        handled = onCheckedFilesActionChosen(menuId, checkedFiles)
-        return handled
+        val checkedFiles = ArrayList(checkedFilesWithSyncInfo.map { it.file })
+        return onCheckedFilesActionChosen(menuId, checkedFiles)
     }
 
     private fun onSingleFileActionChosen(menuId: Int?, singleFile: OCFile): Boolean {
@@ -1552,11 +1608,14 @@ class MainFileListFragment : Fragment(),
         } else {
             if (actionMode == null) {
                 actionMode = (requireActivity() as AppCompatActivity).startSupportActionMode(actionModeCallback)
+                // Selection mode changes the controls of every visible row.
+                fileListAdapter.notifyItemRangeChanged(0, fileListAdapter.itemCount)
             }
             actionMode?.apply {
                 title = selectedItems.toString()
                 invalidate()
             }
+            updateSelectionActionCard()
         }
     }
 

@@ -21,28 +21,26 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardView"
+                style="@style/Widget.Material3.CardView.Filled"
                 app:cardElevation="0dp"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_margin="5dp"
-                android:elevation="10dp"
-                app:cardBackgroundColor="?attr/colorSurface"
-                app:cardCornerRadius="8dp">
+                app:cardBackgroundColor="?attr/colorSurfaceContainer">
 
                 <ImageView
                     android:id="@+id/fdImageDetailFile"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="?attr/colorSurface"
                     android:contentDescription="@string/filedetails_file_image_content_description"
                     android:scaleType="centerInside"
                     android:src="@drawable/file"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <ImageView
                 android:id="@+id/badgeDetailFile"
@@ -138,7 +136,7 @@
             android:layout_marginTop="@dimen/activity_vertical_margin"
             android:gravity="end"
             android:text=""
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="@color/action_mode_status_bar_background"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/fdTypeLabel"
@@ -162,7 +160,7 @@
             android:layout_marginTop="12dp"
             android:gravity="end"
             android:text=""
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="@color/action_mode_status_bar_background"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/fdSizeLabel"
@@ -199,7 +197,7 @@
             android:gravity="end"
             android:visibility="gone"
             android:text=""
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="@color/action_mode_status_bar_background"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/fdModifiedLabel"
@@ -226,7 +224,7 @@
             android:layout_marginTop="12dp"
             android:gravity="end"
             android:visibility="gone"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="@color/action_mode_status_bar_background"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/fdCreatedLabel"
@@ -253,7 +251,7 @@
             android:layout_marginTop="12dp"
             android:gravity="end"
             android:visibility="gone"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="@color/action_mode_status_bar_background"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/fdLastSyncLabel"
@@ -287,7 +285,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:gravity="end"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="@color/action_mode_status_bar_background"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/fdPathLabel"
@@ -315,7 +313,7 @@
             android:gravity="end"
             android:paddingRight="5dp"
             android:visibility="gone"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintEnd_toStartOf="@id/fdIconSpace"
             app:layout_constraintStart_toEndOf="@id/fdSpaceLabel"

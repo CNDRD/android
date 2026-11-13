@@ -23,12 +23,12 @@
 
 package eu.opencloud.android.presentation.conflicts
 
-import android.app.AlertDialog
 import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import eu.opencloud.android.R
 import eu.opencloud.android.extensions.avoidScreenshotsIfNeeded
 
@@ -37,7 +37,7 @@ class ConflictsResolveDialogFragment : DialogFragment() {
     private lateinit var listener: OnConflictDecisionMadeListener
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val dialog = AlertDialog.Builder(requireActivity())
+        val dialog = MaterialAlertDialogBuilder(requireActivity())
             .setIcon(R.drawable.ic_warning)
             .setTitle(R.string.conflict_title)
             .setMessage(R.string.conflict_message)

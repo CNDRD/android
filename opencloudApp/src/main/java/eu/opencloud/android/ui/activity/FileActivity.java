@@ -27,7 +27,6 @@ package eu.opencloud.android.ui.activity;
 
 import android.accounts.Account;
 import android.accounts.AuthenticatorException;
-import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -39,6 +38,7 @@ import android.os.Parcelable;
 
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import eu.opencloud.android.R;
 import eu.opencloud.android.domain.files.model.FileListOption;
@@ -269,7 +269,7 @@ public class FileActivity extends DrawerActivity
 
     protected void showRequestAccountChangeNotice(String errorMessage, boolean mustChange) {
         if (mustChange) {
-            new AlertDialog.Builder(this)
+            new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.auth_failure_snackbar_action)
                     .setMessage(errorMessage)
                     .setPositiveButton(android.R.string.yes, (dialog, which) -> requestCredentialsUpdate())
@@ -410,30 +410,9 @@ public class FileActivity extends DrawerActivity
 
     @Override
     public void navigateToOption(FileListOption fileListOption) {
-        Intent intent;
-        switch (fileListOption) {
-            case ALL_FILES:
-                restart();
-                break;
-            case SPACES_LIST:
-                intent = new Intent(this, FileDisplayActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intent.putExtra(EXTRA_FILE_LIST_OPTION, (Parcelable) FileListOption.SPACES_LIST);
-                startActivity(intent);
-                break;
-            case SHARED_BY_LINK:
-                intent = new Intent(this, FileDisplayActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intent.putExtra(EXTRA_FILE_LIST_OPTION, (Parcelable) FileListOption.SHARED_BY_LINK);
-                startActivity(intent);
-                break;
-            case AV_OFFLINE:
-                intent = new Intent(this, FileDisplayActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intent.putExtra(EXTRA_FILE_LIST_OPTION, (Parcelable) FileListOption.AV_OFFLINE);
-                startActivity(intent);
-                break;
-        }
+        Intent intent = new Intent(this, FileDisplayActivity.class);
+        intent.putExtra(EXTRA_FILE_LIST_OPTION, (Parcelable) fileListOption);
+        startBottomNavigationActivity(intent);
     }
 
     protected OCFile getCurrentDir() {

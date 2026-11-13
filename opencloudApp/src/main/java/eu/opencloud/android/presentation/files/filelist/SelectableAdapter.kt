@@ -59,8 +59,12 @@ abstract class SelectableAdapter<VH : RecyclerView.ViewHolder?> :
      * Clear the selection status for all items
      */
     fun clearSelection() {
+        if (selectedItems.size() == 0) return
+        val previousSelection = getSelectedItems()
         selectedItems.clear()
-        notifyDataSetChanged()
+        previousSelection.forEach { position ->
+            if (position in 0 until itemCount) notifyItemChanged(position)
+        }
     }
 
     /**
@@ -87,13 +91,13 @@ abstract class SelectableAdapter<VH : RecyclerView.ViewHolder?> :
                 selectedItems.put(i, true)
             }
         }
-        notifyDataSetChanged()
+        if (totalItems > 0) notifyItemRangeChanged(0, totalItems)
     }
 
     fun selectAll(totalItems: Int) {
         for (i in 0 until totalItems) {
             selectedItems.put(i, true)
         }
-        notifyDataSetChanged()
+        if (totalItems > 0) notifyItemRangeChanged(0, totalItems)
     }
 }

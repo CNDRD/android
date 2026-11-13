@@ -33,7 +33,6 @@ import android.accounts.Account
 import android.accounts.AccountAuthenticatorResponse
 import android.accounts.AccountManager
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
@@ -51,6 +50,7 @@ import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import eu.opencloud.android.BuildConfig
 import eu.opencloud.android.MainApp.Companion.accountType
 import eu.opencloud.android.R
@@ -595,7 +595,7 @@ class LoginActivity : AppCompatActivity(), SslUntrustedCertDialog.OnSslUntrusted
                 } else {
                     text = getString(R.string.auth_connection_established)
                     setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_lock_open, 0, 0, 0)
-                    val builder = AlertDialog.Builder(context)
+                    val builder = MaterialAlertDialogBuilder(context)
                     builder.apply {
                         setTitle(context.getString(R.string.insecure_http_url_title_dialog))
                         setMessage(context.getString(R.string.insecure_http_url_message_dialog))

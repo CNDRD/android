@@ -82,8 +82,8 @@
         <View
             android:id="@+id/shareHeaderDivider"
             android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:background="@color/actionbar_start_color" />
+            android:layout_height="1dp"
+            android:background="?attr/colorOutlineVariant" />
 
         <LinearLayout
             android:id="@+id/shareWithUsersSection"
@@ -93,8 +93,8 @@
 
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/actionbar_start_color">
+                android:layout_height="wrap_content"
+                android:background="?attr/colorSurfaceContainer">
 
                 <TextView
                     android:id="@+id/shareWithUsersSectionTitle"
@@ -103,9 +103,8 @@
                     android:layout_centerVertical="true"
                     android:paddingStart="@dimen/standard_half_padding"
                     android:text="@string/share_with_user_section_title"
-                    android:textAllCaps="true"
-                    android:textColor="?attr/colorOnPrimary"
-                    android:textStyle="bold"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textColor="?attr/colorOnSurface"
                     android:accessibilityHeading="true"/>
 
                 <ImageButton
@@ -113,8 +112,9 @@
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:layout_alignParentEnd="true"
-                    android:background="@color/transparent"
+                    android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_add"
+                    android:tint="?attr/colorPrimary"
                     android:contentDescription="@string/content_description_add_share" />
 
             </RelativeLayout>
@@ -148,8 +148,8 @@
 
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/actionbar_start_color">
+                android:layout_height="wrap_content"
+                android:background="?attr/colorSurfaceContainer">
 
                 <TextView
                     android:id="@+id/shareWithPublicLinkTitle"
@@ -158,9 +158,8 @@
                     android:layout_centerVertical="true"
                     android:paddingStart="@dimen/standard_half_padding"
                     android:text="@string/share_via_link_section_title"
-                    android:textAllCaps="true"
-                    android:textColor="?attr/colorOnPrimary"
-                    android:textStyle="bold"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textColor="?attr/colorOnSurface"
                     android:accessibilityHeading="true"/>
 
                 <ImageButton
@@ -168,8 +167,9 @@
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:layout_alignParentEnd="true"
-                    android:background="@color/transparent"
+                    android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_add"
+                    android:tint="?attr/colorPrimary"
                     android:contentDescription="@string/content_description_add_public_link" />
 
             </RelativeLayout>

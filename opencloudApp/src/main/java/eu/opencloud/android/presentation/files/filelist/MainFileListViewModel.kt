@@ -196,6 +196,14 @@ class MainFileListViewModel(
         sharedPreferencesProvider.putBoolean(RECYCLER_VIEW_PREFERRED, isGridModeSelected)
     }
 
+    fun getPreferredGridColumns(): Int =
+        sharedPreferencesProvider.getInt(PREFERRED_GRID_COLUMNS, 0).takeIf { it in 2..6 } ?: 0
+
+    fun setPreferredGridColumns(columns: Int) {
+        require(columns == 0 || columns in 2..6)
+        sharedPreferencesProvider.putInt(PREFERRED_GRID_COLUMNS, columns)
+    }
+
     fun isGridModeSetAsPreferred() = sharedPreferencesProvider.getBoolean(RECYCLER_VIEW_PREFERRED, false)
 
     private fun sortList(filesWithSyncInfo: List<OCFileWithSyncInfo>, sortTypeAndOrder: Pair<SortType, SortOrder>): List<OCFileWithSyncInfo> =
@@ -455,6 +463,7 @@ class MainFileListViewModel(
     }
 
     companion object {
+        private const val PREFERRED_GRID_COLUMNS = "preferred_grid_columns"
         private const val RECYCLER_VIEW_PREFERRED = "RECYCLER_VIEW_PREFERRED"
     }
 }

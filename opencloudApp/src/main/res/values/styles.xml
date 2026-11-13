@@ -25,7 +25,7 @@
     <!-- General openCloud app style.
          To apply directly only on Activities that cannot extend ToolbarActivity;
          otherwise, prefer Theme.openCloud.Toolbar -->
-    <style name="Theme.openCloud" parent="Theme.AppCompat.DayNight.DarkActionBar">
+    <style name="Theme.openCloud" parent="Theme.openCloud.Material3">
         <item name="android:windowBackground">?android:attr/colorBackground</item>
 
         <!-- theme for the app bar (both for old actionbar and new toolbar) -->
@@ -36,20 +36,10 @@
         <item name="actionModeBackground">@color/action_mode_background</item>
 
         <!-- colors, Material Design way -->
-        <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/actionbar_start_color</item>
-        <item name="colorAccent">@color/color_accent</item>
-        <item name="android:colorBackground">@color/theme_color_background</item>
-        <item name="colorSurface">@color/theme_color_surface</item>
-        <item name="colorOnSurface">@color/theme_color_on_surface</item>
-        <item name="colorOnSurfaceVariant">@color/theme_color_on_surface_variant</item>
-        <item name="colorOutline">@color/theme_color_outline</item>
-        <item name="colorOnPrimary">@color/theme_color_on_primary</item>
-        <item name="colorOnBackground">@color/theme_color_on_surface</item>
-        <item name="colorSelection">@color/theme_color_selection</item>
-
-        <!-- default theme for alert dialogs -->
-        <item name="alertDialogTheme">@style/Theme.openCloud.AlertDialog</item>
+        <item name="android:colorBackground">@color/m3_surface</item>
+        <item name="colorOnBackground">@color/m3_on_surface</item>
+        <item name="colorSelection">@color/m3_secondary_container</item>
 
         <!-- style for search view -->
         <item name="searchViewStyle">@style/openCloud.SearchView</item>
@@ -117,6 +107,7 @@
     -->
     <style name="openCloud.Appbar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
         <item name="colorPrimary">@color/actionbar_start_color</item>
+        <item name="colorOnPrimary">@android:color/white</item>
         <item name="toolbarNavigationButtonStyle">@style/Toolbar.Button.Navigation.Tinted</item>
     </style>
 
@@ -293,12 +284,6 @@
         <!-- properties for action mode -->
         <item name="windowActionModeOverlay">true</item>
         <item name="actionModeBackground">@color/action_mode_background</item>
-    </style>
-
-    <style name="Button.Authenticator" parent="Widget.AppCompat.Button.Colored">
-        <item name="colorButtonNormal">@color/login_button_background_color</item>
-        <item name="colorAccent">@color/login_button_background_color</item>
-        <item name="android:textColor">@color/login_button_text_color</item>
     </style>
 
     <style name="EditText.Authenticator" parent="Widget.AppCompat.EditText">

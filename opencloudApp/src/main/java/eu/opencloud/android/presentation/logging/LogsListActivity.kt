@@ -29,7 +29,6 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.view.MenuItem
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -38,6 +37,7 @@ import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import eu.opencloud.android.R
 import eu.opencloud.android.databinding.LogsListActivityBinding
 import eu.opencloud.android.extensions.openFile
@@ -197,7 +197,7 @@ class LogsListActivity : AppCompatActivity() {
     }
 
     private fun showDownloadDialog(fileName: String) {
-        val dialog = AlertDialog.Builder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.log_file_downloaded))
             .setIcon(R.drawable.ic_baseline_download_grey)
             .setMessage(getString(R.string.log_file_downloaded_description, fileName))
