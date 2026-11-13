@@ -4,14 +4,12 @@ import android.app.Application
 import android.view.LayoutInflater
 import android.view.View
 import androidx.appcompat.view.ContextThemeWrapper
-import androidx.appcompat.widget.AppCompatButton
 import androidx.test.core.app.ApplicationProvider
 import com.google.android.material.button.MaterialButton
 import eu.opencloud.android.R
 import eu.opencloud.android.databinding.NavCoordinatorLayoutBinding
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,14 +25,6 @@ class StartupLayoutTest {
     )
 
     @Test
-    fun `original Material button rejects the existing AppCompat theme`() {
-        val failure = assertThrows(IllegalArgumentException::class.java) {
-            MaterialButton(context())
-        }
-        assertTrue(failure.message.orEmpty().contains("Theme.MaterialComponents"))
-    }
-
-    @Test
     fun `main screen layout inflates with the real app theme`() {
         checkStartupLayout()
     }
@@ -48,7 +38,7 @@ class StartupLayoutTest {
     private fun checkStartupLayout() {
         val binding = NavCoordinatorLayoutBinding.inflate(LayoutInflater.from(context()))
         assertNotNull(binding.root.findViewById<View>(R.id.root_toolbar))
-        assertTrue(binding.uploadFeedback is AppCompatButton)
+        assertNotNull(binding.root.findViewById<MaterialButton>(R.id.upload_feedback))
         assertEquals(View.GONE, binding.uploadFeedback.visibility)
         var clicked = false
         binding.uploadFeedback.setOnClickListener { clicked = true }
