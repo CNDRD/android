@@ -1403,21 +1403,19 @@ class MainFileListFragment : Fragment(),
      */
     @SuppressLint("UseRequireInsteadOfGet")
     private fun onFileActionChosen(menuId: Int?): Boolean {
-        var handled: Boolean
         val checkedFilesWithSyncInfo = fileListAdapter.getCheckedItems()
+        if (checkedFilesWithSyncInfo.isEmpty()) return false
 
-        if (checkedFilesWithSyncInfo.isEmpty()) {
-            return false
-        } else if (checkedFilesWithSyncInfo.size == 1) {
-            /// Action possible on a single file
-            val singleFile = checkedFilesWithSyncInfo.first().file
-            handled = onSingleFileActionChosen(menuId, singleFile)
+        // Single-file actions take precedence. Only fall back to batch actions
+        // when the selected menu item was not handled by the single-file handler.
+        if (checkedFilesWithSyncInfo.size == 1 &&
+            onSingleFileActionChosen(menuId, checkedFilesWithSyncInfo.first().file)
+        ) {
+            return true
         }
 
-        /// Actions possible on a batch of files
         val checkedFiles = ArrayList(checkedFilesWithSyncInfo.map { it.file })
-        handled = onCheckedFilesActionChosen(menuId, checkedFiles)
-        return handled
+        return onCheckedFilesActionChosen(menuId, checkedFiles)
     }
 
     private fun onSingleFileActionChosen(menuId: Int?, singleFile: OCFile): Boolean {
@@ -1599,6 +1597,8 @@ class MainFileListFragment : Fragment(),
         } else {
             if (actionMode == null) {
                 actionMode = (requireActivity() as AppCompatActivity).startSupportActionMode(actionModeCallback)
+                // Selection mode changes the controls of every visible row.
+                fileListAdapter.notifyItemRangeChanged(0, fileListAdapter.itemCount)
             }
             actionMode?.apply {
                 title = selectedItems.toString()
