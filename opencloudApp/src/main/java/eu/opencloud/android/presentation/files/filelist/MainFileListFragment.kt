@@ -205,6 +205,7 @@ class MainFileListFragment : Fragment(),
      * responsible for overflow operations and permission filtering.
      */
     private fun setupSelectionActions() {
+        binding.selectionClose.setOnClickListener { actionMode?.finish() }
         binding.selectionSelectAll.setOnClickListener {
             onFileActionChosen(R.id.file_action_select_all)
         }
