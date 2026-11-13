@@ -225,7 +225,18 @@ class MainFileListFragment : Fragment(),
 
     private fun updateSelectionActionCard() {
         val count = fileListAdapter.selectedItemCount
-        binding.selectionActionCard.isVisible = count > 0 && actionMode != null
+        val isSelecting = count > 0 && actionMode != null
+        binding.selectionActionCard.isVisible = isSelecting
+        // Keep the last files reachable above the contextual action surface.
+        val list = binding.recyclerViewMainFileList
+        val bottomPadding = if (isSelecting) {
+            (168 * resources.displayMetrics.density).toInt()
+        } else {
+            (4 * resources.displayMetrics.density).toInt()
+        }
+        if (list.paddingBottom != bottomPadding) {
+            list.setPadding(list.paddingLeft, list.paddingTop, list.paddingRight, bottomPadding)
+        }
         if (count == 0) return
 
         binding.selectionCountLabel.text = resources.getQuantityString(
@@ -353,6 +364,11 @@ class MainFileListFragment : Fragment(),
             setDrawerStatus(enabled = true)
             actionMode = null
             binding.selectionActionCard.isVisible = false
+            val list = binding.recyclerViewMainFileList
+            list.setPadding(
+                list.paddingLeft, list.paddingTop, list.paddingRight,
+                (4 * resources.displayMetrics.density).toInt()
+            )
 
             requireActivity().findViewById<View>(R.id.opencloud_app_bar).isFocusableInTouchMode = true
 
