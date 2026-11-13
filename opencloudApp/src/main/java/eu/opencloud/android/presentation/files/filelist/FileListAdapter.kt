@@ -276,7 +276,7 @@ class FileListAdapter(
             }
             val checkBoxV = holder.itemView.findViewById<ImageView>(R.id.custom_checkbox).apply {
                 isVisible = hasActiveSelection
-                isImportantForAccessibility = false
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
             }
 
             // Preserve the XML ripple and rounded Material 3 selection surface.
