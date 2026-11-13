@@ -108,6 +108,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:scrollbars="vertical"
+                    android:clipToPadding="false"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
                     tools:listitem="@layout/item_file_list"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/space_header"/>
