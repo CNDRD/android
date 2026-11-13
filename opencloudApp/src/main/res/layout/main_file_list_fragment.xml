@@ -131,6 +131,85 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+
+    <!-- Contextual Material 3 action surface, shown only during multi-selection. -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/selection_action_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginBottom="12dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="6dp"
+        app:strokeColor="?attr/colorOutline"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:id="@+id/selection_count_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="8dp"
+                android:paddingBottom="8dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fillViewport="true"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/selection_select_all"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/actionbar_select_all" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/selection_move"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/actionbar_move" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/selection_copy"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/copy" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/selection_delete"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/common_remove" />
+
+                </LinearLayout>
+            </HorizontalScrollView>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
     <com.getbase.floatingactionbutton.FloatingActionsMenu
         android:id="@+id/fab_main"
         android:layout_width="wrap_content"
