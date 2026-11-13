@@ -208,6 +208,9 @@ class MainFileListFragment : Fragment(),
         binding.selectionSelectAll.setOnClickListener {
             onFileActionChosen(R.id.file_action_select_all)
         }
+        binding.selectionInvert.setOnClickListener {
+            onFileActionChosen(R.id.action_select_inverse)
+        }
         binding.selectionMove.setOnClickListener {
             onFileActionChosen(R.id.action_move)
         }
