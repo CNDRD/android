@@ -915,7 +915,6 @@ class FileDisplayActivity : FileActivity(),
         } else if (!isDrawerOpen() && isFabOpen) {
             // close fab
             mainFileListFragment?.collapseFab()
-            mainFileListFragment?.setFabMainContentDescription()
         } else {
             // Every single menu is collapsed. We can navigate up.
             if (secondFragment != null) {

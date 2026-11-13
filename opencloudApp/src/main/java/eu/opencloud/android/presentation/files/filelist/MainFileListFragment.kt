@@ -63,7 +63,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import coil.load
 import com.bumptech.glide.Glide
-import com.getbase.floatingactionbutton.AddFloatingActionButton
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.snackbar.Snackbar
@@ -421,6 +420,7 @@ class MainFileListFragment : Fragment(),
         isMultiPersonal = capabilityViewModel.checkMultiPersonal()
         initViews()
         setupSelectionActions()
+        setupFabActions()
         subscribeToViewModels()
     }
 
@@ -538,8 +538,6 @@ class MainFileListFragment : Fragment(),
 
         showOrHideFab(requireArguments().getParcelable(ARG_FILE_LIST_OPTION)!!, requireArguments().getParcelable(ARG_INITIAL_FOLDER_TO_DISPLAY)!!)
 
-        setFabMainContentDescription()
-
         setTextHintRootToolbar()
     }
 
@@ -642,8 +640,8 @@ class MainFileListFragment : Fragment(),
     }
     private fun observeAppRegistryToCreateFiles() {
         collectLatestLifecycleFlow(mainFileListViewModel.appRegistryToCreateFiles) { listAppRegistry ->
-            binding.fabNewfile.isVisible = listAppRegistry.isNotEmpty()
-            registerFabNewFileListener(listAppRegistry)
+            binding.fabNewfile.isVisible =
+                mainFileListViewModel.getFile().hasAddFilePermission && listAppRegistry.isNotEmpty()
         }
     }
 
@@ -1102,6 +1100,7 @@ class MainFileListFragment : Fragment(),
     }
 
     override fun onDestroyView() {
+        collapseFab()
         dismissUploadSheet()
         super.onDestroyView()
     }
@@ -1133,137 +1132,65 @@ class MainFileListFragment : Fragment(),
     private fun showOrHideFab(newFileListOption: FileListOption, currentFolder: OCFile) {
         val isFabSupportedView = newFileListOption.isAllFiles() ||
                 (newFileListOption.isSharedByLink() && currentFolder.remotePath != ROOT_PATH)
-        if (!isFabSupportedView || isPickingAFolder() ||
-            (!currentFolder.hasAddFilePermission && !currentFolder.hasAddSubdirectoriesPermission)) {
-            toggleFabVisibility(false)
-        } else {
-            toggleFabVisibility(true)
-            if (!currentFolder.hasAddFilePermission) {
-                binding.fabUpload.isVisible = false
-                binding.fabTakePhoto.isVisible = false
-                binding.fabNewfile.isVisible = false
-            } else if (!currentFolder.hasAddSubdirectoriesPermission) {
-                binding.fabMkdir.isVisible = false
-            }
-            registerFabMainListener()
-            registerFabUploadListener()
-            registerFabTakePhotoListener()
-            registerFabMkDirListener()
-            registerFabNewShortcutListener()
-            binding.apply {
-                fabUpload.isFocusable = false
-                fabTakePhoto.isFocusable = false
-                fabMkdir.isFocusable = false
-                fabNewfile.isFocusable = false
-                fabNewshortcut.isFocusable = false
-            }
-        }
+        val canAddFiles = currentFolder.hasAddFilePermission
+        val canAddFolders = currentFolder.hasAddSubdirectoriesPermission
+        toggleFabVisibility(
+            isFabSupportedView && !isPickingAFolder() && (canAddFiles || canAddFolders)
+        )
+        binding.fabUpload.isVisible = canAddFiles
+        binding.fabTakePhoto.isVisible = canAddFiles
+        binding.fabMkdir.isVisible = canAddFolders
+        binding.fabNewfile.isVisible = canAddFiles && mainFileListViewModel.appRegistryToCreateFiles.value.isNotEmpty()
     }
 
-    /**
-     * Sets the 'visibility' state of the main FAB and its mini FABs contained in the fragment.
-     *
-     * When 'false' is set, FAB visibility is set to View.GONE programmatically.
-     * Mini FABs are automatically hidden after hiding the main one.
-     *
-     * @param shouldBeShown Desired visibility for the FAB.
-     */
     private fun toggleFabVisibility(shouldBeShown: Boolean) {
+        if (!shouldBeShown) collapseFab()
         binding.fabMain.isVisible = shouldBeShown
-        binding.fabUpload.isVisible = shouldBeShown
-        binding.fabTakePhoto.isVisible = shouldBeShown
-        binding.fabMkdir.isVisible = shouldBeShown
     }
 
-    private fun registerFabMainListener() {
-        binding.apply {
-            fabMain.findViewById<View>(R.id.fab_expand_menu_button).setOnClickListener {
-                fabMain.toggle()
-                fabUpload.isFocusable = isFabExpanded()
-                fabTakePhoto.isFocusable = isFabExpanded()
-                fabMkdir.isFocusable = isFabExpanded()
-                fabNewfile.isFocusable = isFabExpanded()
-                fabNewshortcut.isFocusable = isFabExpanded()
-                if (fabMain.isExpanded) {
-                    binding.fabMain.findViewById<AddFloatingActionButton>(com.getbase.floatingactionbutton.R.id.fab_expand_menu_button)
-                        .contentDescription = getString(R.string.content_description_add_new_content_expanded)
-                } else {
-                    setFabMainContentDescription()
-                }
+    private fun setupFabActions() = with(binding) {
+        fabMain.setOnClickListener {
+            if (isFabExpanded()) {
+                collapseFab()
+            } else {
+                fabActions.isVisible = true
+                fabMain.setImageResource(R.drawable.ic_close)
+                fabMain.contentDescription = getString(R.string.content_description_add_new_content_expanded)
             }
         }
-    }
-
-    /**
-     * Registers [android.view.View.OnClickListener] on the 'Upload' mini FAB for the linked action.
-     */
-    private fun registerFabUploadListener() {
-        binding.fabUpload.setOnClickListener {
+        fabUpload.setOnClickListener {
+            collapseFab()
             openBottomSheetToUploadFiles()
-            collapseFab()
         }
-    }
-
-    /**
-     * Registers [android.view.View.OnClickListener] on the 'Take a photo' mini FAB for the linked action.
-     */
-    private fun registerFabTakePhotoListener() {
-        binding.fabTakePhoto.setOnClickListener {
+        fabTakePhoto.setOnClickListener {
+            collapseFab()
             uploadActions?.uploadFromCamera()
-            collapseFab()
         }
-    }
-
-    /**
-     * Registers [android.view.View.OnClickListener] on the 'New folder' mini FAB for the linked action.
-     */
-    private fun registerFabMkDirListener() {
-        binding.fabMkdir.setOnClickListener {
-            val dialog = CreateFolderDialogFragment.newInstance(mainFileListViewModel.getFile(), this)
+        fabMkdir.setOnClickListener {
+            collapseFab()
+            val dialog = CreateFolderDialogFragment.newInstance(mainFileListViewModel.getFile(), this@MainFileListFragment)
             dialog.show(requireActivity().supportFragmentManager, DIALOG_CREATE_FOLDER)
-            collapseFab()
         }
-    }
-
-    /**
-     * Registers [android.view.View.OnClickListener] on the 'New document' mini FAB for the linked action.
-     */
-    private fun registerFabNewFileListener(listAppRegistry: List<AppRegistryMimeType>) {
-        binding.fabNewfile.setOnClickListener {
-            openBottomSheetToCreateNewFile(listAppRegistry)
+        fabNewfile.setOnClickListener {
             collapseFab()
+            openBottomSheetToCreateNewFile(mainFileListViewModel.appRegistryToCreateFiles.value)
         }
-    }
-
-    /**
-     * Registers [android.view.View.OnClickListener] on the 'New shortcut' mini FAB for the linked action.
-     */
-    private fun registerFabNewShortcutListener() {
-        binding.fabNewshortcut.setOnClickListener {
-            val dialog = CreateShortcutDialogFragment.newInstance(mainFileListViewModel.getFile(), this)
+        fabNewshortcut.setOnClickListener {
+            collapseFab()
+            val dialog = CreateShortcutDialogFragment.newInstance(mainFileListViewModel.getFile(), this@MainFileListFragment)
             dialog.show(requireActivity().supportFragmentManager, DIALOG_CREATE_SHORTCUT)
-            collapseFab()
         }
     }
 
     fun collapseFab() {
-        binding.apply {
-            fabMain.collapse()
-            fabUpload.isFocusable = false
-            fabTakePhoto.isFocusable = false
-            fabMkdir.isFocusable = false
-            fabNewfile.isFocusable = false
-            fabNewshortcut.isFocusable = false
+        _binding?.apply {
+            fabActions.isVisible = false
+            fabMain.setImageResource(R.drawable.ic_add)
+            fabMain.contentDescription = getString(R.string.content_description_add_new_content)
         }
-
     }
 
-    fun isFabExpanded() = binding.fabMain.isExpanded
-
-    fun setFabMainContentDescription() {
-        binding.fabMain.findViewById<AddFloatingActionButton>(com.getbase.floatingactionbutton.R.id.fab_expand_menu_button).contentDescription =
-            getString(R.string.content_description_add_new_content)
-    }
+    fun isFabExpanded() = _binding?.fabActions?.isVisible == true
 
     private fun openBottomSheetToUploadFiles() {
         if (uploadSheetView != null) return
